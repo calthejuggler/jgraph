@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json package.json
 COPY bun.lock bun.lock
 
-RUN bun install
+RUN bun install --frozen-lockfile
 
 COPY ./src ./src
 
@@ -26,6 +26,6 @@ COPY --from=build /app/server server
 
 ENV NODE_ENV=production
 
-CMD ["./server"]
-
 EXPOSE 3000
+
+CMD ["./server"]
