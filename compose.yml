@@ -2,8 +2,10 @@ services:
   engine:
     container_name: engine
     build: ./engine
-    ports:
-      - "8000:8000"
+    environment:
+      ENGINE_API_KEY: ${ENGINE_API_KEY}
+    networks:
+      - internal
   server:
     container_name: server
     build: ./server
@@ -16,8 +18,14 @@ services:
       DB_HOST: db
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      ENGINE_URL: http://engine:8000
+      ENGINE_API_KEY: ${ENGINE_API_KEY}
     depends_on:
       - db
+      - engine
+    networks:
+      - public
+      - internal
   db:
     image: postgres:17
     container_name: db
@@ -29,6 +37,13 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pg_data:/var/lib/postgresql/data
+    networks:
+      - public
 
 volumes:
   pg_data:
+
+networks:
+  public:
+  internal:
+    internal: true
