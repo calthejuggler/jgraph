@@ -176,3 +176,9 @@ dist
 
 # Generated graph output
 graph.html
+
+# Rust
+/engine/target
+/engine/debug
+
+**/*.rs.bk
