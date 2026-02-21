@@ -17,6 +17,7 @@ FROM alpine:3.21
 RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
 COPY --from=builder /app/target/release/engine .
+RUN mkdir -p /app/cache && chown app:app /app/cache
 USER app
 EXPOSE 8000
 CMD ["./engine"]

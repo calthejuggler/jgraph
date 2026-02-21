@@ -1,26 +1,82 @@
-use axum::Json;
 use axum::body::Body;
+use axum::extract::{Query, State as AxumState};
 use axum::http::{StatusCode, header};
 use axum::response::Response;
-use tokio::sync::mpsc;
-use tokio_stream::wrappers::ReceiverStream;
+use bytes::Bytes;
 
+use crate::cache::memory::fits_in_memory;
+use crate::cache::redis::fits_in_redis;
 use crate::graph::GraphParams;
 use crate::state::State;
 use crate::transition::Transition;
 
-pub async fn get_graph(Json(params): Json<GraphParams>) -> Result<Response, StatusCode> {
+pub async fn get_graph_query(
+    AxumState(app): AxumState<crate::AppState>,
+    Query(params): Query<GraphParams>,
+) -> Result<Response, StatusCode> {
+    build_graph_response(app, params).await
+}
+
+async fn build_graph_response(
+    app: crate::AppState,
+    params: GraphParams,
+) -> Result<Response, StatusCode> {
     params.validate()?;
 
-    let (tx, rx) = mpsc::channel::<Result<String, std::io::Error>>(32);
+    let key = format!(
+        "{}-{}-{}",
+        params.num_balls, params.max_height, params.compact
+    );
 
-    tokio::spawn(async move {
-        let _ = stream_graph(tx, params).await;
-    });
+    if let Some(data) = app.memory_cache.get(&key).await {
+        return ok_response(Body::from(data));
+    }
 
-    let stream = ReceiverStream::new(rx);
-    let body = Body::from_stream(stream);
+    if let Some(ref rc) = app.redis_cache
+        && let Some(data) = rc.get(&key).await
+    {
+        if fits_in_memory(&data) {
+            app.memory_cache
+                .insert(key.clone(), Bytes::from(data.clone()))
+                .await;
+        }
+        return ok_response(Body::from(data));
+    }
 
+    if let Some(data) = app.file_cache.get(&key).await {
+        if let Some(ref rc) = app.redis_cache
+            && fits_in_redis(&data)
+        {
+            rc.put(&key, &data).await;
+        }
+        if fits_in_memory(&data) {
+            app.memory_cache
+                .insert(key.clone(), Bytes::from(data.clone()))
+                .await;
+        }
+        return ok_response(Body::from(data));
+    }
+
+    let data = tokio::task::spawn_blocking(move || compute_graph(&params))
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    app.file_cache.put(&key, &data).await;
+    if let Some(ref rc) = app.redis_cache
+        && fits_in_redis(&data)
+    {
+        rc.put(&key, &data).await;
+    }
+    if fits_in_memory(&data) {
+        app.memory_cache
+            .insert(key, Bytes::from(data.clone()))
+            .await;
+    }
+
+    ok_response(Body::from(data))
+}
+
+fn ok_response(body: Body) -> Result<Response, StatusCode> {
     Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/json")
@@ -28,10 +84,7 @@ pub async fn get_graph(Json(params): Json<GraphParams>) -> Result<Response, Stat
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-async fn stream_graph(
-    tx: mpsc::Sender<Result<String, std::io::Error>>,
-    params: GraphParams,
-) -> Result<(), ()> {
+pub fn compute_graph(params: &GraphParams) -> Vec<u8> {
     let compact = params.compact;
     let max_height = params.max_height;
     let num_balls = params.num_balls;
@@ -56,14 +109,6 @@ async fn stream_graph(
             buf.push(',');
         }
         buf.push_str(&state_value(state));
-
-        if buf.len() >= 4096 {
-            let chunk = std::mem::take(&mut buf);
-            buf.reserve(4096);
-            if tx.send(Ok(chunk)).await.is_err() {
-                return Err(());
-            }
-        }
     }
 
     buf.push_str("],\"edges\":[");
@@ -87,14 +132,6 @@ async fn stream_graph(
             buf.push_str(",\"throw_height\":");
             buf.push_str(&t.throw_height().to_string());
             buf.push('}');
-
-            if buf.len() >= 4096 {
-                let chunk = std::mem::take(&mut buf);
-                buf.reserve(4096);
-                if tx.send(Ok(chunk)).await.is_err() {
-                    return Err(());
-                }
-            }
         }
     }
 
@@ -108,9 +145,5 @@ async fn stream_graph(
     buf.push_str(&num_balls.to_string());
     buf.push('}');
 
-    if !buf.is_empty() {
-        let _ = tx.send(Ok(buf)).await;
-    }
-
-    Ok(())
+    buf.into_bytes()
 }

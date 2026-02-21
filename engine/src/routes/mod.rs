@@ -1,10 +1,12 @@
-mod graphs;
+pub mod graphs;
 mod health;
 
 use axum::Router;
 
-pub fn protected() -> Router {
-    Router::new().route("/graphs", axum::routing::post(graphs::get_graph))
+use crate::AppState;
+
+pub fn protected() -> Router<AppState> {
+    Router::new().route("/graphs", axum::routing::get(graphs::get_graph_query))
 }
 
 pub fn public() -> Router {
