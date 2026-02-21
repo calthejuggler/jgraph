@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::state::State;
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct Transition {
     from: State,
     to: State,
@@ -22,47 +22,47 @@ impl Display for Transition {
 }
 
 impl Transition {
-    pub fn get_from(&self) -> State {
+    pub fn from(&self) -> State {
         self.from
     }
 
-    pub fn get_to(&self) -> State {
+    pub fn to(&self) -> State {
         self.to
     }
 
-    pub fn get_throw_height(&self) -> u8 {
+    pub fn throw_height(&self) -> u8 {
         self.throw_height
     }
-}
 
-pub fn get_transitions(state: State, max_height: u8) -> Vec<Transition> {
-    let mut transitions: Vec<Transition> = vec![];
+    pub fn from_state(state: State, max_height: u8) -> Vec<Transition> {
+        let mut transitions: Vec<Transition> = vec![];
 
-    let rightmost = state.bits() & 1 != 0;
-    let shifted = state.bits() >> 1;
+        let rightmost = state.bits() & 1 != 0;
+        let shifted = state.bits() >> 1;
 
-    if !rightmost {
-        transitions.push(Transition {
-            from: state,
-            to: State::new(shifted, max_height).unwrap(),
-            throw_height: 0,
-            max_height,
-        });
-    } else {
-        for bit_pos in 0..max_height {
-            if (shifted >> bit_pos) & 1 == 0 {
-                let new_bits = shifted | (1 << bit_pos);
-                let throw_height = (bit_pos + 1) as u8;
+        if !rightmost {
+            transitions.push(Transition {
+                from: state,
+                to: State::new(shifted, max_height).unwrap(),
+                throw_height: 0,
+                max_height,
+            });
+        } else {
+            for bit_pos in 0..max_height {
+                if (shifted >> bit_pos) & 1 == 0 {
+                    let new_bits = shifted | (1 << bit_pos);
+                    let throw_height = (bit_pos + 1) as u8;
 
-                transitions.push(Transition {
-                    from: state,
-                    to: State::new(new_bits, max_height).unwrap(),
-                    throw_height,
-                    max_height,
-                });
+                    transitions.push(Transition {
+                        from: state,
+                        to: State::new(new_bits, max_height).unwrap(),
+                        throw_height,
+                        max_height,
+                    });
+                }
             }
         }
-    }
 
-    transitions
+        transitions
+    }
 }

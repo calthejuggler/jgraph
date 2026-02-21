@@ -1,0 +1,4 @@
+/engine/target/
+/engine/debug/
+.git/
+.env

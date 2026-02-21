@@ -1,18 +1,14 @@
-use clap::Parser;
-
-mod cli;
 mod graph;
+mod routes;
 mod state;
-mod state_set;
 mod transition;
 
-fn main() {
-    let args = cli::Args::parse();
+#[tokio::main]
+async fn main() {
+    let app = axum::Router::new().nest("/v1", routes::v1());
 
-    let num_balls = args.num_balls;
-    let max_height = args.max_height;
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
+    println!("listening on port 8000");
 
-    let graph = graph::Graph::new(num_balls, max_height);
-
-    graph.print();
+    axum::serve(listener, app).await.unwrap();
 }
