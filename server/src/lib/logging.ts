@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { logger } from "./logger";
 
 export type WideEvent = {
-  num_balls?: number;
+  num_props?: number;
   max_height?: number;
   compact?: boolean;
   cache_hit?: string;

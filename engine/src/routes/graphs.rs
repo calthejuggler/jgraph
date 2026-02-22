@@ -29,14 +29,14 @@ async fn build_graph_response(
 
     if let Some(ref we) = wide_event {
         let mut we = we.lock().unwrap();
-        we.num_balls = Some(params.num_balls);
+        we.num_props = Some(params.num_props);
         we.max_height = Some(params.max_height);
         we.compact = Some(params.compact);
     }
 
     let key = format!(
         "{}-{}-{}",
-        params.num_balls, params.max_height, params.compact
+        params.num_props, params.max_height, params.compact
     );
 
     if let Some(data) = app.memory_cache.get(&key).await {
@@ -119,9 +119,9 @@ fn ok_response(body: Body) -> Result<Response, StatusCode> {
 pub fn compute_graph(params: &GraphParams) -> Vec<u8> {
     let compact = params.compact;
     let max_height = params.max_height;
-    let num_balls = params.num_balls;
+    let num_props = params.num_props;
 
-    let states = State::generate(num_balls, max_height);
+    let states = State::generate(num_props, max_height);
     let num_nodes = states.len();
 
     let state_value = |s: &State| -> String {
@@ -173,8 +173,8 @@ pub fn compute_graph(params: &GraphParams) -> Vec<u8> {
     buf.push_str(&num_edges.to_string());
     buf.push_str(",\"max_height\":");
     buf.push_str(&max_height.to_string());
-    buf.push_str(",\"num_balls\":");
-    buf.push_str(&num_balls.to_string());
+    buf.push_str(",\"num_props\":");
+    buf.push_str(&num_props.to_string());
     buf.push('}');
 
     buf.into_bytes()

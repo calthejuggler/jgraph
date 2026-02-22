@@ -27,16 +27,16 @@ pub async fn precompute(
     let mut skipped = 0u32;
     let mut cached = 0u32;
 
-    for num_balls in 1u8..=32 {
-        for max_height in num_balls..=32 {
-            let num_states = combinations(max_height as u64, num_balls as u64);
+    for num_props in 1u8..=32 {
+        for max_height in num_props..=32 {
+            let num_states = combinations(max_height as u64, num_props as u64);
             if num_states > 10_000 {
                 skipped += 1;
                 continue;
             }
 
             for compact in [false, true] {
-                let key = format!("{}-{}-{}", num_balls, max_height, compact);
+                let key = format!("{}-{}-{}", num_props, max_height, compact);
 
                 if file_cache.exists(&key).await {
                     cached += 1;
@@ -44,7 +44,7 @@ pub async fn precompute(
                 }
 
                 let params = GraphParams {
-                    num_balls,
+                    num_props,
                     max_height,
                     compact,
                 };

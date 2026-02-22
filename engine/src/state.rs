@@ -21,51 +21,51 @@ impl State {
         self.0
     }
 
-    pub fn ball_at(&self, pos: u8) -> bool {
+    pub fn prop_at(&self, pos: u8) -> bool {
         (self.0 >> pos) & 1 != 0
     }
 
     pub fn display(&self, max_height: u8) -> String {
         (0..max_height)
             .rev()
-            .map(|i| if self.ball_at(i) { 'x' } else { '0' })
+            .map(|i| if self.prop_at(i) { 'x' } else { '0' })
             .collect()
     }
 
     pub fn to_binary_string(self, max_height: u8) -> String {
         (0..max_height)
             .rev()
-            .map(|i| if self.ball_at(i) { '1' } else { '0' })
+            .map(|i| if self.prop_at(i) { '1' } else { '0' })
             .collect()
     }
 
-    pub fn generate(num_balls: u8, max_height: u8) -> Vec<State> {
+    pub fn generate(num_props: u8, max_height: u8) -> Vec<State> {
         let mut states: Vec<State> = vec![];
-        Self::backtrack(max_height, 0, num_balls, 0, &mut states);
+        Self::backtrack(max_height, 0, num_props, 0, &mut states);
         states
     }
 
-    fn backtrack(max_height: u8, pos: u8, balls_left: u8, current: Bits, states: &mut Vec<State>) {
+    fn backtrack(max_height: u8, pos: u8, props_left: u8, current: Bits, states: &mut Vec<State>) {
         let remaining = max_height - pos;
-        if balls_left > remaining {
+        if props_left > remaining {
             return;
         }
         if pos == max_height {
-            if balls_left == 0 {
+            if props_left == 0 {
                 states.push(State(current));
             }
             return;
         }
 
         // Place '0' at this position
-        Self::backtrack(max_height, pos + 1, balls_left, current, states);
+        Self::backtrack(max_height, pos + 1, props_left, current, states);
 
         // Place '1' at this position
-        if balls_left > 0 {
+        if props_left > 0 {
             Self::backtrack(
                 max_height,
                 pos + 1,
-                balls_left - 1,
+                props_left - 1,
                 current | (1 << (max_height - 1 - pos)),
                 states,
             );

@@ -7,7 +7,7 @@ use axum::response::Response;
 
 #[derive(Default)]
 pub struct WideEvent {
-    pub num_balls: Option<u8>,
+    pub num_props: Option<u8>,
     pub max_height: Option<u8>,
     pub compact: Option<bool>,
     pub cache_hit_tier: Option<&'static str>,
@@ -44,7 +44,7 @@ pub async fn wide_event_middleware(mut req: Request, next: Next) -> Response {
             query,
             status,
             duration_ms,
-            num_balls = we.num_balls,
+            num_props = we.num_props,
             max_height = we.max_height,
             compact = we.compact,
             cache_hit_tier = we.cache_hit_tier,
@@ -62,7 +62,7 @@ pub async fn wide_event_middleware(mut req: Request, next: Next) -> Response {
             query,
             status,
             duration_ms,
-            num_balls = we.num_balls,
+            num_props = we.num_props,
             max_height = we.max_height,
             compact = we.compact,
             cache_hit_tier = we.cache_hit_tier,

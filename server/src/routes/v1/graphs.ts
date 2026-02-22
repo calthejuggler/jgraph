@@ -5,7 +5,7 @@ const ENGINE_URL = Bun.env.ENGINE_URL ?? "http://localhost:8000";
 const ENGINE_API_KEY = Bun.env.ENGINE_API_KEY ?? "";
 
 const graphQuerySchema = t.Object({
-  num_balls: t.Integer({ minimum: 1, maximum: 32 }),
+  num_props: t.Integer({ minimum: 1, maximum: 32 }),
   max_height: t.Integer({ minimum: 1, maximum: 32 }),
   compact: t.Optional(t.Boolean({ default: false })),
 });
@@ -18,18 +18,18 @@ export const graphsRoute = new Elysia()
       const wideEvent = (ctx as unknown as { wideEvent: WideEvent }).wideEvent;
 
       if (wideEvent) {
-        wideEvent.num_balls = query.num_balls;
+        wideEvent.num_props = query.num_props;
         wideEvent.max_height = query.max_height;
         wideEvent.compact = query.compact ?? false;
       }
 
-      if (query.max_height < query.num_balls) {
+      if (query.max_height < query.num_props) {
         set.status = 400;
-        if (wideEvent) wideEvent.error_message = "max_height must be >= num_balls";
-        return { error: "max_height must be >= num_balls" };
+        if (wideEvent) wideEvent.error_message = "max_height must be >= num_props";
+        return { error: "max_height must be >= num_props" };
       }
 
-      const etag = `"${query.num_balls}-${query.max_height}-${query.compact ?? false}"`;
+      const etag = `"${query.num_props}-${query.max_height}-${query.compact ?? false}"`;
 
       if (headers["if-none-match"] === etag) {
         set.status = 304;
@@ -38,7 +38,7 @@ export const graphsRoute = new Elysia()
       }
 
       const params = new URLSearchParams({
-        num_balls: String(query.num_balls),
+        num_props: String(query.num_props),
         max_height: String(query.max_height),
         compact: String(query.compact ?? false),
       });
