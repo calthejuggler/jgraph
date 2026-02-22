@@ -39,10 +39,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       DB_HOST: db
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
-      ENGINE_URL: http://engine:8000
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      ENGINE_URL: ${ENGINE_URL:-http://engine:8000}
       ENGINE_API_KEY: ${ENGINE_API_KEY}
-      CORS_ORIGIN: http://localhost:5173
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
     depends_on:
       db:
         condition: service_healthy
@@ -58,7 +58,7 @@ services:
     build:
       context: ./web
       args:
-        VITE_API_URL: http://localhost:3000
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
     ports:
       - "5173:80"
     networks:
