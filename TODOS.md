@@ -35,6 +35,7 @@ Checklist of features from the [State Notation wiki](https://juggle.fandom.com/w
 
 - [ ] Onboarding
 - [ ] Tutorial
+- [ ] Internationalisation
 
 ### Distribution
 
