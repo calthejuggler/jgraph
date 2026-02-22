@@ -1,18 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 
+import type { GraphApiResponse } from "@/lib/graph-types";
 import type { GraphsValues } from "@/lib/schemas";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export function useGraphs(params: GraphsValues | null) {
-  return useQuery({
+  return useQuery<GraphApiResponse>({
     queryKey: ["graphs", params],
     enabled: params !== null,
+    staleTime: Infinity,
     queryFn: async () => {
       const searchParams = new URLSearchParams({
         num_props: String(params!.num_props),
         max_height: String(params!.max_height),
-        compact: String(params!.compact),
+        compact: "true",
       });
 
       const res = await fetch(`${API_URL}/api/v1/graphs?${searchParams}`, {
