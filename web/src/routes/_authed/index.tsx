@@ -5,8 +5,8 @@ import { MAX_MAX_HEIGHT } from "@/lib/schemas";
 import { GraphsPage } from "@/pages/graphs";
 
 const searchSchema = z.object({
-  num_props: z.number().int().min(1).max(MAX_MAX_HEIGHT).optional().catch(undefined),
-  max_height: z.number().int().min(1).max(MAX_MAX_HEIGHT).optional().catch(undefined),
+  num_props: z.number().int().min(1).max(MAX_MAX_HEIGHT).catch(3),
+  max_height: z.number().int().min(1).max(MAX_MAX_HEIGHT).catch(5),
 });
 
 export const Route = createFileRoute("/_authed/")({

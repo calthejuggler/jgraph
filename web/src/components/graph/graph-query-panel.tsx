@@ -13,17 +13,17 @@ import { MAX_MAX_HEIGHT, type GraphsValues } from "@/lib/schemas";
 interface GraphQueryPanelProps {
   form: UseFormReturn<GraphsValues>;
   onSubmit: (values: GraphsValues) => void;
+  onFieldChange: () => void;
   isFetching: boolean;
   error: Error | null;
-  paramsMatch: boolean;
 }
 
 export function GraphQueryPanel({
   form,
   onSubmit,
+  onFieldChange,
   isFetching,
   error,
-  paramsMatch,
 }: GraphQueryPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -31,7 +31,10 @@ export function GraphQueryPanel({
     <Panel position="top-left">
       <Card className="w-72 shadow-lg">
         <div className="flex items-center justify-between px-4 pt-3 pb-0">
-          <span className="text-sm font-semibold">Query</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold">Query</span>
+            {isFetching && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          </div>
           <Button
             variant="ghost"
             size="sm"
@@ -57,7 +60,10 @@ export function GraphQueryPanel({
                         min={1}
                         max={MAX_MAX_HEIGHT}
                         value={field.value}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        onChange={(e) => {
+                          field.onChange(e.target.valueAsNumber);
+                          onFieldChange();
+                        }}
                         onBlur={field.onBlur}
                         ref={field.ref}
                         aria-invalid={fieldState.invalid}
@@ -78,7 +84,10 @@ export function GraphQueryPanel({
                         min={1}
                         max={MAX_MAX_HEIGHT}
                         value={field.value}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        onChange={(e) => {
+                          field.onChange(e.target.valueAsNumber);
+                          onFieldChange();
+                        }}
                         onBlur={field.onBlur}
                         ref={field.ref}
                         aria-invalid={fieldState.invalid}
@@ -88,23 +97,6 @@ export function GraphQueryPanel({
                   )}
                 />
               </div>
-              <Button
-                type="submit"
-                size="sm"
-                className="w-full"
-                variant={paramsMatch && !isFetching ? "outline" : "default"}
-                disabled={isFetching || paramsMatch}
-              >
-                {isFetching ? (
-                  <>
-                    <Loader2 className="animate-spin" /> Loading...
-                  </>
-                ) : paramsMatch ? (
-                  "Up to date"
-                ) : (
-                  "Query"
-                )}
-              </Button>
               {error && (
                 <p className="text-destructive text-xs">
                   {error instanceof Error ? error.message : "Request failed"}

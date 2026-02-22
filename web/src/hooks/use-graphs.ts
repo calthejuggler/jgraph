@@ -10,6 +10,8 @@ export function useGraphs(params: GraphsValues | null) {
     queryKey: ["graphs", params],
     enabled: params !== null,
     staleTime: Infinity,
+    retry: (_failureCount, error) =>
+      !(error instanceof Error && error.message.startsWith("Too many requests")),
     queryFn: async () => {
       const searchParams = new URLSearchParams({
         num_props: String(params!.num_props),

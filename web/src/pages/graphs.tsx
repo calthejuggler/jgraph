@@ -1,8 +1,10 @@
-import { useForm, useWatch } from "react-hook-form";
+import { useCallback } from "react";
+import { useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { GraphCanvas } from "@/components/graph/graph-canvas";
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { useGraphs } from "@/hooks/use-graphs";
 import { graphsSchema, type GraphsValues } from "@/lib/schemas";
 import { Route } from "@/routes/_authed/index";
@@ -11,25 +13,35 @@ export function GraphsPage() {
   const { num_props, max_height } = Route.useSearch();
   const navigate = Route.useNavigate();
 
-  const submitted: GraphsValues | null =
-    num_props != null && max_height != null ? { num_props, max_height } : null;
+  const submitted: GraphsValues = { num_props, max_height };
 
   const form = useForm<GraphsValues>({
     resolver: zodResolver(graphsSchema),
-    defaultValues: {
-      num_props: num_props ?? 3,
-      max_height: max_height ?? 5,
-    },
+    defaultValues: submitted,
+    mode: "onChange",
   });
 
   const { data, error, isFetching } = useGraphs(submitted);
 
-  const watched = useWatch({ control: form.control });
-  const paramsMatch =
-    data != null && data.num_props === watched.num_props && data.max_height === watched.max_height;
+  const navigateToSearch = useCallback(
+    (values: GraphsValues) => {
+      navigate({ search: values, replace: true });
+    },
+    [navigate],
+  );
+
+  const debouncedNavigate = useDebouncedCallback(navigateToSearch, 400);
+
+  function onFieldChange() {
+    const values = form.getValues();
+    const result = graphsSchema.safeParse(values);
+    if (result.success) {
+      debouncedNavigate(result.data);
+    }
+  }
 
   function onSubmit(values: GraphsValues) {
-    navigate({ search: values });
+    navigate({ search: values, replace: true });
   }
 
   return (
@@ -38,9 +50,9 @@ export function GraphsPage() {
         data={data}
         form={form}
         onSubmit={onSubmit}
+        onFieldChange={onFieldChange}
         isFetching={isFetching}
         error={error}
-        paramsMatch={paramsMatch}
       />
     </div>
   );

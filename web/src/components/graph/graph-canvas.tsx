@@ -15,8 +15,8 @@ import { useTheme } from "@/hooks/use-theme";
 import type { GraphApiResponse, GraphEdge, GraphNode } from "@/lib/graph-types";
 import type { GraphsValues } from "@/lib/schemas";
 
-import { graphNodeTypes } from "./graph-node";
 import { GraphDetailsPanel } from "./graph-details-panel";
+import { graphNodeTypes } from "./graph-node";
 import { GraphQueryPanel } from "./graph-query-panel";
 
 const FIT_VIEW_OPTIONS = { padding: 0.2 } as const;
@@ -28,18 +28,18 @@ interface GraphCanvasProps {
   data: GraphApiResponse | undefined;
   form: UseFormReturn<GraphsValues>;
   onSubmit: (values: GraphsValues) => void;
+  onFieldChange: () => void;
   isFetching: boolean;
   error: Error | null;
-  paramsMatch: boolean;
 }
 
 export function GraphCanvas({
   data,
   form,
   onSubmit,
+  onFieldChange,
   isFetching,
   error,
-  paramsMatch,
 }: GraphCanvasProps) {
   const { theme } = useTheme();
   const layout = useGraphLayout(data);
@@ -69,16 +69,11 @@ export function GraphCanvas({
       <GraphQueryPanel
         form={form}
         onSubmit={onSubmit}
+        onFieldChange={onFieldChange}
         isFetching={isLoading}
         error={error}
-        paramsMatch={paramsMatch}
       />
       <GraphDetailsPanel nodeCount={data?.num_nodes} edgeCount={data?.num_edges} />
-      {!data && !isLoading && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <p className="text-muted-foreground text-lg">Submit a query to visualize the graph</p>
-        </div>
-      )}
       {!layout && isLoading && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="flex flex-col items-center gap-2">
