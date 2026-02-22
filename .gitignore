@@ -209,3 +209,10 @@ graph.html
 /server/**/*.log
 /server/package-lock.json
 /server/**/*.bun
+
+# Web
+/web/node_modules
+/web/.pnp
+/web/.pnp.js
+/web/dist
+/web/.DS_Store
