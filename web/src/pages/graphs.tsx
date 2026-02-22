@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useGraphs } from "@/hooks/use-graphs";
-import { graphsSchema, type GraphsValues } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Field, FieldLabel, FieldError } from "@/components/ui/field";
+import { useGraphs } from "@/hooks/use-graphs";
+import { graphsSchema, MAX_MAX_HEIGHT, type GraphsValues } from "@/lib/schemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 
 export function GraphsPage() {
   const [submitted, setSubmitted] = useState<GraphsValues | null>(null);
@@ -33,24 +33,19 @@ export function GraphsPage() {
           <CardTitle>Query Graphs</CardTitle>
         </CardHeader>
         <CardContent>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Controller
                 name="num_props"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="num_props">
-                      Number of props
-                    </FieldLabel>
+                    <FieldLabel htmlFor="num_props">Number of props</FieldLabel>
                     <Input
                       id="num_props"
                       type="number"
                       min={1}
-                      max={10}
+                      max={MAX_MAX_HEIGHT}
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
                       onBlur={field.onBlur}
@@ -71,7 +66,7 @@ export function GraphsPage() {
                       id="max_height"
                       type="number"
                       min={1}
-                      max={10}
+                      max={MAX_MAX_HEIGHT}
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
                       onBlur={field.onBlur}

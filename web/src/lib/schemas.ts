@@ -15,7 +15,7 @@ export const signupSchema = z.object({
 
 export type SignupValues = z.infer<typeof signupSchema>;
 
-const MAX_MAX_HEIGHT = 13;
+export const MAX_MAX_HEIGHT = 13;
 
 export const graphsSchema = z
   .object({
