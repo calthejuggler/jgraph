@@ -1,4 +1,3 @@
-import { MarkerType } from "@xyflow/react";
 import dagre from "dagre";
 
 import type { ExpandedGraphResponse, GraphApiResponse, GraphEdge, GraphNode } from "./graph-types";
@@ -59,7 +58,6 @@ export function computeGraphLayout(data: GraphApiResponse): {
     source: edge.from,
     target: edge.to,
     label: String(edge.throw_height),
-    markerEnd: { type: MarkerType.ArrowClosed },
   }));
 
   return { nodes, edges };
