@@ -38,6 +38,7 @@ bun run lint             # ESLint check (web + server + scripts)
 bun run lint:fix         # Auto-fix lint errors
 bun run format           # Format all files with Prettier
 bun run format:check     # Check formatting (CI mode)
+bun run typecheck        # TypeScript type-check (web)
 ```
 
 Environment: copy `.env.example` to `.env` and fill in secrets before running.

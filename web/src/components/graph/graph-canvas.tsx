@@ -16,6 +16,7 @@ import type { GraphApiResponse, GraphEdge, GraphNode } from "@/lib/graph-types";
 import type { GraphsValues } from "@/lib/schemas";
 
 import { graphNodeTypes } from "./graph-node";
+import { GraphDetailsPanel } from "./graph-details-panel";
 import { GraphQueryPanel } from "./graph-query-panel";
 
 const FIT_VIEW_OPTIONS = { padding: 0.2 } as const;
@@ -70,10 +71,9 @@ export function GraphCanvas({
         onSubmit={onSubmit}
         isFetching={isLoading}
         error={error}
-        nodeCount={data?.num_nodes}
-        edgeCount={data?.num_edges}
         paramsMatch={paramsMatch}
       />
+      <GraphDetailsPanel nodeCount={data?.num_nodes} edgeCount={data?.num_edges} />
       {!data && !isLoading && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <p className="text-muted-foreground text-lg">Submit a query to visualize the graph</p>

@@ -15,8 +15,6 @@ interface GraphQueryPanelProps {
   onSubmit: (values: GraphsValues) => void;
   isFetching: boolean;
   error: Error | null;
-  nodeCount?: number;
-  edgeCount?: number;
   paramsMatch: boolean;
 }
 
@@ -25,8 +23,6 @@ export function GraphQueryPanel({
   onSubmit,
   isFetching,
   error,
-  nodeCount,
-  edgeCount,
   paramsMatch,
 }: GraphQueryPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
@@ -35,14 +31,7 @@ export function GraphQueryPanel({
     <Panel position="top-left">
       <Card className="w-72 shadow-lg">
         <div className="flex items-center justify-between px-4 pt-3 pb-0">
-          <span className="text-sm font-semibold">
-            Query
-            {nodeCount != null && edgeCount != null && (
-              <span className="text-muted-foreground ml-2 font-normal">
-                {nodeCount}n / {edgeCount}e
-              </span>
-            )}
-          </span>
+          <span className="text-sm font-semibold">Query</span>
           <Button
             variant="ghost"
             size="sm"
