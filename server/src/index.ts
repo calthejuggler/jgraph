@@ -18,6 +18,8 @@ const main = async () => {
     process.exit(1);
   }
 
+  logger.info({ event: "cors_config", origin: Bun.env.CORS_ORIGIN ?? "http://localhost:5173" });
+
   const app = new Elysia()
     .use(cors({ origin: Bun.env.CORS_ORIGIN ?? "http://localhost:5173", credentials: true }))
     .use(loggingPlugin)
