@@ -1,4 +1,4 @@
-FROM oven/bun AS build
+FROM oven/bun AS builder
 
 WORKDIR /app
 
@@ -23,8 +23,8 @@ FROM gcr.io/distroless/base
 
 WORKDIR /app
 
-COPY --from=build /app/server server
-COPY --from=build /app/drizzle ./drizzle
+COPY --from=builder /app/server server
+COPY --from=builder /app/drizzle ./drizzle
 
 ENV NODE_ENV=production
 
