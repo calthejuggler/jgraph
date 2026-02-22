@@ -6,21 +6,31 @@ import { Switch } from "@/components/ui/switch";
 import { useGraphs } from "@/hooks/use-graphs";
 import { graphsSchema, MAX_MAX_HEIGHT, type GraphsValues } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { Route } from "@/routes/_authed/index";
 
 export function GraphsPage() {
-  const [submitted, setSubmitted] = useState<GraphsValues | null>(null);
+  const { num_props, max_height, compact } = Route.useSearch();
+  const navigate = Route.useNavigate();
+
+  const submitted: GraphsValues | null =
+    num_props != null && max_height != null && compact != null
+      ? { num_props, max_height, compact }
+      : null;
 
   const form = useForm<GraphsValues>({
     resolver: zodResolver(graphsSchema),
-    defaultValues: { num_props: 3, max_height: 5, compact: false },
+    defaultValues: {
+      num_props: num_props ?? 3,
+      max_height: max_height ?? 5,
+      compact: compact ?? false,
+    },
   });
 
   const { data, error, isFetching } = useGraphs(submitted);
 
   function onSubmit(values: GraphsValues) {
-    setSubmitted(values);
+    navigate({ search: values });
   }
 
   const nodeCount = data?.nodes?.length;
