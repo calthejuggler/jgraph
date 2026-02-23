@@ -8,10 +8,15 @@ COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
+ARG STATE_SIZE=u32
 COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
-RUN cargo build --release
+RUN if [ "$STATE_SIZE" != "u32" ]; then \
+      cargo build --release --features "state-${STATE_SIZE}"; \
+    else \
+      cargo build --release; \
+    fi
 
 FROM alpine:3.21
 RUN addgroup -S app && adduser -S app -G app

@@ -141,7 +141,11 @@ async function main() {
     log("engine", "Install it with: cargo install cargo-watch");
   }
 
-  const engineCmd = hasCargoWatch ? ["cargo", "watch", "-x", "run"] : ["cargo", "run"];
+  const stateSize = env.STATE_SIZE;
+  const cargoFeatures = stateSize && stateSize !== "u32" ? `state-${stateSize}` : "";
+  const engineCmd = hasCargoWatch
+    ? ["cargo", "watch", "-x", cargoFeatures ? `run --features ${cargoFeatures}` : "run"]
+    : ["cargo", "run", ...(cargoFeatures ? ["--features", cargoFeatures] : [])];
 
   procs.push(
     spawnApp("engine", engineCmd, resolve(ROOT, "engine"), {

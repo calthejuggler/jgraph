@@ -1,6 +1,8 @@
 use axum::http::StatusCode;
 use serde::Deserialize;
 
+use crate::state::MAX_MAX_HEIGHT;
+
 #[derive(Deserialize)]
 pub struct GraphParams {
     pub num_props: u8,
@@ -13,10 +15,10 @@ pub struct GraphParams {
 
 impl GraphParams {
     pub fn validate(&self) -> Result<(), StatusCode> {
-        if self.max_height > 32 {
+        if self.max_height > MAX_MAX_HEIGHT {
             return Err(StatusCode::BAD_REQUEST);
         }
-        if self.num_props > 32 {
+        if self.num_props > MAX_MAX_HEIGHT {
             return Err(StatusCode::BAD_REQUEST);
         }
         if self.max_height < self.num_props {
@@ -45,17 +47,17 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_rejects_max_height_above_32() {
+    fn test_validate_rejects_max_height_above_limit() {
         assert_eq!(
-            params(3, 33).validate().unwrap_err(),
+            params(3, MAX_MAX_HEIGHT + 1).validate().unwrap_err(),
             StatusCode::BAD_REQUEST
         );
     }
 
     #[test]
-    fn test_validate_rejects_num_props_above_32() {
+    fn test_validate_rejects_num_props_above_limit() {
         assert_eq!(
-            params(33, 5).validate().unwrap_err(),
+            params(MAX_MAX_HEIGHT + 1, 5).validate().unwrap_err(),
             StatusCode::BAD_REQUEST
         );
     }

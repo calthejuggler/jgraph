@@ -1,7 +1,10 @@
 services:
   engine:
     container_name: engine
-    build: ./engine
+    build:
+      context: ./engine
+      args:
+        STATE_SIZE: ${STATE_SIZE:-u32}
     environment:
       ENGINE_API_KEY: ${ENGINE_API_KEY}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
@@ -43,6 +46,7 @@ services:
       ENGINE_URL: ${ENGINE_URL:-http://engine:8000}
       ENGINE_API_KEY: ${ENGINE_API_KEY}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      STATE_SIZE: ${STATE_SIZE:-u32}
     depends_on:
       db:
         condition: service_healthy

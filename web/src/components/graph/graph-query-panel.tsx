@@ -10,7 +10,8 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { MAX_MAX_HEIGHT, type GraphsValues } from "@/lib/schemas";
+import { useConfig } from "@/hooks/use-config";
+import { UI_MAX_HEIGHT, type GraphsValues } from "@/lib/schemas";
 
 interface GraphQueryPanelProps {
   form: UseFormReturn<GraphsValues>;
@@ -31,6 +32,8 @@ export function GraphQueryPanel({
   isFetching,
   error,
 }: GraphQueryPanelProps) {
+  const { data: config } = useConfig();
+  const effectiveMax = Math.min(config?.max_max_height ?? UI_MAX_HEIGHT, UI_MAX_HEIGHT);
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -64,7 +67,7 @@ export function GraphQueryPanel({
                         id="num_props"
                         type="number"
                         min={1}
-                        max={MAX_MAX_HEIGHT}
+                        max={effectiveMax}
                         value={field.value}
                         onChange={(e) => {
                           field.onChange(e.target.valueAsNumber);
@@ -88,7 +91,7 @@ export function GraphQueryPanel({
                         id="max_height"
                         type="number"
                         min={1}
-                        max={MAX_MAX_HEIGHT}
+                        max={effectiveMax}
                         value={field.value}
                         onChange={(e) => {
                           field.onChange(e.target.valueAsNumber);

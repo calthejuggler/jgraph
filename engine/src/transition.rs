@@ -71,7 +71,9 @@ impl Transition {
 mod tests {
     use super::*;
 
-    fn state(bits: u32, max_height: u8) -> State {
+    use crate::state::Bits;
+
+    fn state(bits: Bits, max_height: u8) -> State {
         State::new(bits, max_height).unwrap()
     }
 
@@ -100,7 +102,7 @@ mod tests {
         assert_eq!(transitions.len(), 3);
         let heights: Vec<u8> = transitions.iter().map(|t| t.throw_height()).collect();
         assert_eq!(heights, vec![3, 4, 5]);
-        let destinations: Vec<u32> = transitions.iter().map(|t| t.to().bits()).collect();
+        let destinations: Vec<Bits> = transitions.iter().map(|t| t.to().bits()).collect();
         assert_eq!(destinations, vec![0b00111, 0b01011, 0b10011]);
     }
 
@@ -110,7 +112,7 @@ mod tests {
         let transitions = Transition::from_state(s, 5);
         let heights: Vec<u8> = transitions.iter().map(|t| t.throw_height()).collect();
         assert_eq!(heights, vec![1, 3, 5]);
-        let destinations: Vec<u32> = transitions.iter().map(|t| t.to().bits()).collect();
+        let destinations: Vec<Bits> = transitions.iter().map(|t| t.to().bits()).collect();
         assert_eq!(destinations, vec![0b01011, 0b01110, 0b11010]);
     }
 

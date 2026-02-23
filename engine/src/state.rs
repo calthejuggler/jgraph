@@ -1,14 +1,33 @@
-type Bits = u32;
+#[cfg(feature = "state-u8")]
+pub type Bits = u8;
+#[cfg(feature = "state-u16")]
+pub type Bits = u16;
+#[cfg(not(any(
+    feature = "state-u8",
+    feature = "state-u16",
+    feature = "state-u64",
+    feature = "state-u128"
+)))]
+pub type Bits = u32;
+#[cfg(feature = "state-u64")]
+pub type Bits = u64;
+#[cfg(feature = "state-u128")]
+pub type Bits = u128;
+
+pub const MAX_MAX_HEIGHT: u8 = Bits::BITS as u8;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, serde::Serialize)]
 pub struct State(Bits);
 
 impl State {
     pub fn new(bits: Bits, max_height: u8) -> Result<Self, String> {
-        if max_height > 32 {
-            return Err(format!("max_height {} exceeds 32", max_height));
+        if max_height > MAX_MAX_HEIGHT {
+            return Err(format!(
+                "max_height {} exceeds {}",
+                max_height, MAX_MAX_HEIGHT
+            ));
         }
-        if max_height < 32 && bits >> max_height != 0 {
+        if max_height < MAX_MAX_HEIGHT && bits >> max_height != 0 {
             return Err(format!(
                 "bits {:#b} has bits set above max_height {}",
                 bits, max_height
@@ -83,8 +102,8 @@ mod tests {
     }
 
     #[test]
-    fn test_new_rejects_max_height_above_32() {
-        assert!(State::new(0, 33).is_err());
+    fn test_new_rejects_max_height_above_limit() {
+        assert!(State::new(0, MAX_MAX_HEIGHT + 1).is_err());
     }
 
     #[test]
@@ -93,8 +112,8 @@ mod tests {
     }
 
     #[test]
-    fn test_new_max_height_32_allows_all_bits() {
-        let s = State::new(u32::MAX, 32);
+    fn test_new_max_height_allows_all_bits() {
+        let s = State::new(Bits::MAX, MAX_MAX_HEIGHT);
         assert!(s.is_ok());
     }
 
@@ -168,7 +187,7 @@ mod tests {
     #[test]
     fn test_generate_no_duplicates() {
         let states = State::generate(3, 5);
-        let set: HashSet<u32> = states.iter().map(|s| s.bits()).collect();
+        let set: HashSet<Bits> = states.iter().map(|s| s.bits()).collect();
         assert_eq!(set.len(), states.len());
     }
 
@@ -191,8 +210,8 @@ mod tests {
     fn test_generate_known_states() {
         let states = State::generate(3, 5);
         assert_eq!(states.len(), 10);
-        let bits: HashSet<u32> = states.iter().map(|s| s.bits()).collect();
-        let expected: HashSet<u32> = [
+        let bits: HashSet<Bits> = states.iter().map(|s| s.bits()).collect();
+        let expected: HashSet<Bits> = [
             0b00111, 0b01011, 0b01101, 0b01110, 0b10011, 0b10101, 0b10110, 0b11001, 0b11010,
             0b11100,
         ]

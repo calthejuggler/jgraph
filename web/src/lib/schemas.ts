@@ -15,12 +15,12 @@ export const signupSchema = z.object({
 
 export type SignupValues = z.infer<typeof signupSchema>;
 
-export const MAX_MAX_HEIGHT = 9;
+export const UI_MAX_HEIGHT = 9;
 
 export const graphsSchema = z
   .object({
-    num_props: z.number().int().min(1).max(MAX_MAX_HEIGHT),
-    max_height: z.number().int().min(1).max(MAX_MAX_HEIGHT),
+    num_props: z.number().int().min(1).max(UI_MAX_HEIGHT),
+    max_height: z.number().int().min(1).max(UI_MAX_HEIGHT),
   })
   .refine((data) => data.max_height >= data.num_props, {
     message: "Max height must be >= number of props",
