@@ -10,8 +10,8 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useConfig } from "@/hooks/use-config";
 import { UI_MAX_HEIGHT, type GraphsValues } from "@/lib/schemas";
+import { useConfigQuery } from "@/queries/config";
 
 interface GraphQueryPanelProps {
   form: UseFormReturn<GraphsValues>;
@@ -32,7 +32,7 @@ export function GraphQueryPanel({
   isFetching,
   error,
 }: GraphQueryPanelProps) {
-  const { data: config } = useConfig();
+  const { data: config } = useConfigQuery();
   const effectiveMax = Math.min(config?.max_max_height ?? UI_MAX_HEIGHT, UI_MAX_HEIGHT);
   const [collapsed, setCollapsed] = useState(false);
 

@@ -5,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { GraphCanvas } from "@/components/graph/graph-canvas";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
-import { useGraphs } from "@/hooks/use-graphs";
 import { graphsSchema, type GraphsValues } from "@/lib/schemas";
+import { useGraphQuery } from "@/queries/graphs";
 import { Route } from "@/routes/_authed/index";
 
 export function GraphsPage() {
@@ -30,7 +30,7 @@ export function GraphsPage() {
     mode: "onChange",
   });
 
-  const { data, error, isFetching } = useGraphs(submitted);
+  const { data, error, isFetching } = useGraphQuery(submitted);
 
   const navigateToSearch = useCallback(
     (values: GraphsValues) => {
