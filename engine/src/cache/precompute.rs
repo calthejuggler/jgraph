@@ -3,10 +3,13 @@ use bytes::Bytes;
 use crate::cache::file::FileCache;
 use crate::cache::memory::fits_in_memory;
 use crate::cache::redis::{RedisCache, fits_in_redis};
-use crate::graph::GraphParams;
+use crate::params::StateNotationQuery;
 use crate::routes::graphs::compute_graph;
+use crate::routes::table::compute_table;
 
 pub(crate) use juggling_tools::util::combinations;
+
+use juggling_tools::state_notation::MAX_MAX_HEIGHT;
 
 pub async fn precompute(
     memory_cache: &moka::future::Cache<String, Bytes>,
@@ -17,8 +20,8 @@ pub async fn precompute(
     let mut skipped = 0u32;
     let mut cached = 0u32;
 
-    for num_props in 1u8..=32 {
-        for max_height in num_props..=32 {
+    for num_props in 1u8..=MAX_MAX_HEIGHT {
+        for max_height in num_props..=MAX_MAX_HEIGHT {
             let num_states = combinations(max_height as u64, num_props as u64);
             if num_states > 10_000 {
                 skipped += 1;
@@ -32,40 +35,70 @@ pub async fn precompute(
 
                 for &reversed in reversed_variants {
                     let effective_reversed = !compact && reversed;
-                    let key = format!(
+
+                    // Precompute graph
+                    let graph_key = format!(
                         "{}-{}-{}-{}",
                         num_props, max_height, compact, effective_reversed
                     );
-
-                    if file_cache.exists(&key).await {
+                    if file_cache.exists(&graph_key).await {
                         cached += 1;
-                        continue;
+                    } else {
+                        let params = StateNotationQuery {
+                            num_props,
+                            max_height,
+                            compact,
+                            reversed,
+                        };
+                        let data = tokio::task::spawn_blocking(move || compute_graph(&params))
+                            .await
+                            .expect("compute_graph panicked");
+
+                        file_cache.put(&graph_key, &data).await;
+                        if let Some(rc) = redis_cache
+                            && fits_in_redis(&data)
+                        {
+                            rc.put(&graph_key, &data).await;
+                        }
+                        if fits_in_memory(&data) {
+                            memory_cache
+                                .insert(graph_key.clone(), Bytes::from(data))
+                                .await;
+                        }
+                        computed += 1;
                     }
 
-                    let params = GraphParams {
-                        num_props,
-                        max_height,
-                        compact,
-                        reversed,
-                    };
+                    // Precompute table
+                    let table_key = format!(
+                        "table-{}-{}-{}-{}",
+                        num_props, max_height, compact, effective_reversed
+                    );
+                    if file_cache.exists(&table_key).await {
+                        cached += 1;
+                    } else {
+                        let params = StateNotationQuery {
+                            num_props,
+                            max_height,
+                            compact,
+                            reversed,
+                        };
+                        let data = tokio::task::spawn_blocking(move || compute_table(&params))
+                            .await
+                            .expect("compute_table panicked");
 
-                    let data = tokio::task::spawn_blocking(move || compute_graph(&params))
-                        .await
-                        .expect("compute_graph panicked");
-
-                    file_cache.put(&key, &data).await;
-
-                    if let Some(rc) = redis_cache
-                        && fits_in_redis(&data)
-                    {
-                        rc.put(&key, &data).await;
+                        file_cache.put(&table_key, &data).await;
+                        if let Some(rc) = redis_cache
+                            && fits_in_redis(&data)
+                        {
+                            rc.put(&table_key, &data).await;
+                        }
+                        if fits_in_memory(&data) {
+                            memory_cache
+                                .insert(table_key.clone(), Bytes::from(data))
+                                .await;
+                        }
+                        computed += 1;
                     }
-
-                    if fits_in_memory(&data) {
-                        memory_cache.insert(key.clone(), Bytes::from(data)).await;
-                    }
-
-                    computed += 1;
                 }
             }
         }

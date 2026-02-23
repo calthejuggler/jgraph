@@ -2,7 +2,7 @@ use axum::http::StatusCode;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub struct GraphParams {
+pub struct StateNotationQuery {
     pub num_props: u8,
     pub max_height: u8,
     #[serde(default)]
@@ -11,15 +11,15 @@ pub struct GraphParams {
     pub reversed: bool,
 }
 
-impl GraphParams {
+impl StateNotationQuery {
     pub fn validate(&self) -> Result<(), StatusCode> {
         self.to_library_params()
             .validate()
             .map_err(|_| StatusCode::BAD_REQUEST)
     }
 
-    pub fn to_library_params(&self) -> juggling_tools::state_notation::GraphParams {
-        juggling_tools::state_notation::GraphParams {
+    pub fn to_library_params(&self) -> juggling_tools::state_notation::Params {
+        juggling_tools::state_notation::Params {
             num_props: self.num_props,
             max_height: self.max_height,
         }
@@ -32,8 +32,8 @@ mod tests {
 
     use juggling_tools::state_notation::MAX_MAX_HEIGHT;
 
-    fn params(num_props: u8, max_height: u8) -> GraphParams {
-        GraphParams {
+    fn params(num_props: u8, max_height: u8) -> StateNotationQuery {
+        StateNotationQuery {
             num_props,
             max_height,
             compact: false,

@@ -2,9 +2,12 @@
 mod graph;
 /// Juggling state representation using bit-packed notation.
 mod state;
+/// State transition table generation.
+mod table;
 /// Transitions between juggling states (throws and catches).
 mod transition;
 
-pub use graph::{Edge, GraphParams, GraphParamsError, StateGraph, compute_graph};
+pub use graph::{Edge, Params, ParamsError, StateGraph, compute_graph};
 pub use state::{Bits, MAX_MAX_HEIGHT, State};
+pub use table::{StateTable, compute_table};
 pub use transition::Transition;

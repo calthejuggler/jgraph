@@ -7,12 +7,12 @@ use bytes::Bytes;
 
 use crate::cache::memory::fits_in_memory;
 use crate::cache::redis::fits_in_redis;
-use crate::graph::GraphParams;
 use crate::logging::WideEventHandle;
+use crate::params::StateNotationQuery;
 
 pub async fn get_graph_query(
     AxumState(app): AxumState<crate::AppState>,
-    Query(params): Query<GraphParams>,
+    Query(params): Query<StateNotationQuery>,
     wide_event: Option<Extension<WideEventHandle>>,
 ) -> Result<Response, StatusCode> {
     build_graph_response(app, params, wide_event.map(|e| e.0)).await
@@ -20,7 +20,7 @@ pub async fn get_graph_query(
 
 async fn build_graph_response(
     app: crate::AppState,
-    params: GraphParams,
+    params: StateNotationQuery,
     wide_event: Option<WideEventHandle>,
 ) -> Result<Response, StatusCode> {
     params.validate()?;
@@ -116,7 +116,7 @@ fn ok_response(body: Body) -> Result<Response, StatusCode> {
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-pub fn compute_graph(params: &GraphParams) -> Vec<u8> {
+pub fn compute_graph(params: &StateNotationQuery) -> Vec<u8> {
     let compact = params.compact;
     let max_height = params.max_height;
     let num_props = params.num_props;
@@ -188,8 +188,8 @@ mod tests {
     use super::*;
     use serde_json::Value;
 
-    fn make_params(num_props: u8, max_height: u8, compact: bool) -> GraphParams {
-        GraphParams {
+    fn make_params(num_props: u8, max_height: u8, compact: bool) -> StateNotationQuery {
+        StateNotationQuery {
             num_props,
             max_height,
             compact,
@@ -197,7 +197,7 @@ mod tests {
         }
     }
 
-    fn parse(params: &GraphParams) -> Value {
+    fn parse(params: &StateNotationQuery) -> Value {
         let data = compute_graph(params);
         serde_json::from_slice(&data).expect("invalid JSON")
     }
@@ -325,8 +325,8 @@ mod tests {
         max_height: u8,
         compact: bool,
         reversed: bool,
-    ) -> GraphParams {
-        GraphParams {
+    ) -> StateNotationQuery {
+        StateNotationQuery {
             num_props,
             max_height,
             compact,

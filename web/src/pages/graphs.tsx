@@ -4,13 +4,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { GraphCanvas } from "@/components/graph/graph-canvas";
+import { StateTableCanvas } from "@/components/table/state-table-canvas";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { graphsSchema, type GraphsValues } from "@/lib/schemas";
 import { useGraphQuery } from "@/queries/graphs";
+import { useTableQuery } from "@/queries/table";
 import { Route } from "@/routes/_authed/index";
 
 export function GraphsPage() {
-  const { num_props, max_height } = Route.useSearch();
+  const { num_props, max_height, view } = Route.useSearch();
   const navigate = Route.useNavigate();
 
   const [reversed, setReversed] = useState(
@@ -30,11 +32,20 @@ export function GraphsPage() {
     mode: "onChange",
   });
 
-  const { data, error, isFetching } = useGraphQuery(submitted);
+  const {
+    data: graphData,
+    error: graphError,
+    isFetching: graphFetching,
+  } = useGraphQuery(submitted, view === "graph");
+  const {
+    data: tableData,
+    error: tableError,
+    isFetching: tableFetching,
+  } = useTableQuery(submitted, view === "table");
 
   const navigateToSearch = useCallback(
     (values: GraphsValues) => {
-      navigate({ search: values, replace: true });
+      navigate({ search: (prev) => ({ ...prev, ...values }), replace: true });
     },
     [navigate],
   );
@@ -49,21 +60,45 @@ export function GraphsPage() {
   }
 
   function onSubmit(values: GraphsValues) {
-    navigate({ search: values, replace: true });
+    navigate({ search: (prev) => ({ ...prev, ...values }), replace: true });
   }
+
+  const handleViewChange = useCallback(
+    (newView: "graph" | "table") => {
+      navigate({ search: (prev) => ({ ...prev, view: newView }), replace: true });
+    },
+    [navigate],
+  );
 
   return (
     <div className="h-full w-full">
-      <GraphCanvas
-        data={data}
-        reversed={reversed}
-        onReversedChange={handleReversedChange}
-        form={form}
-        onSubmit={onSubmit}
-        onFieldChange={onFieldChange}
-        isFetching={isFetching}
-        error={error}
-      />
+      {view === "graph" ? (
+        <GraphCanvas
+          data={graphData}
+          reversed={reversed}
+          onReversedChange={handleReversedChange}
+          form={form}
+          onSubmit={onSubmit}
+          onFieldChange={onFieldChange}
+          isFetching={graphFetching}
+          error={graphError}
+          view={view}
+          onViewChange={handleViewChange}
+        />
+      ) : (
+        <StateTableCanvas
+          data={tableData}
+          reversed={reversed}
+          onReversedChange={handleReversedChange}
+          form={form}
+          onSubmit={onSubmit}
+          onFieldChange={onFieldChange}
+          isFetching={tableFetching}
+          error={tableError}
+          view={view}
+          onViewChange={handleViewChange}
+        />
+      )}
     </div>
   );
 }

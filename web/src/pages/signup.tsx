@@ -27,7 +27,7 @@ export function SignupPage() {
       if (res.error) {
         setServerError(res.error.message ?? "Signup failed");
       } else {
-        navigate({ to: "/", search: { num_props: 3, max_height: 5 } });
+        navigate({ to: "/", search: { num_props: 3, max_height: 5, view: "graph" } });
       }
     } catch {
       setServerError("An unexpected error occurred");

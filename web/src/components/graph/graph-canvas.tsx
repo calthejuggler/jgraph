@@ -33,6 +33,8 @@ interface GraphCanvasProps {
   onFieldChange: () => void;
   isFetching: boolean;
   error: Error | null;
+  view: "graph" | "table";
+  onViewChange: (view: "graph" | "table") => void;
 }
 
 export function GraphCanvas({
@@ -44,6 +46,8 @@ export function GraphCanvas({
   onFieldChange,
   isFetching,
   error,
+  view,
+  onViewChange,
 }: GraphCanvasProps) {
   const { theme } = useTheme();
   const layout = useGraphLayout(data, reversed);
@@ -78,6 +82,8 @@ export function GraphCanvas({
         onReversedChange={onReversedChange}
         isFetching={isLoading}
         error={error}
+        view={view}
+        onViewChange={onViewChange}
       />
       <GraphDetailsPanel nodeCount={data?.num_nodes} edgeCount={data?.num_edges} />
       {!layout && isLoading && (

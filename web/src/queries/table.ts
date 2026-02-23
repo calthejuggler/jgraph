@@ -1,15 +1,15 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { API_URL } from "@/lib/api";
-import type { GraphApiResponse } from "@/lib/graph-types";
 import type { GraphsValues } from "@/lib/schemas";
+import type { TableApiResponse } from "@/lib/table-types";
 
-export const graphQueries = {
-  all: () => ["graphs"] as const,
-  gets: () => [...graphQueries.all(), "get"] as const,
+export const tableQueries = {
+  all: () => ["table"] as const,
+  gets: () => [...tableQueries.all(), "get"] as const,
   get: (params: GraphsValues) =>
     queryOptions({
-      queryKey: [...graphQueries.gets(), params] as const,
+      queryKey: [...tableQueries.gets(), params] as const,
       staleTime: Infinity,
       retry: (_failureCount: number, error: Error) =>
         !error.message.startsWith("Too many requests"),
@@ -20,7 +20,7 @@ export const graphQueries = {
           compact: "true",
         });
 
-        const res = await fetch(`${API_URL}/api/v1/state-notation/graph?${searchParams}`, {
+        const res = await fetch(`${API_URL}/api/v1/state-notation/table?${searchParams}`, {
           credentials: "include",
         });
 
@@ -35,11 +35,11 @@ export const graphQueries = {
           throw new Error(text || `Request failed with status ${res.status}`);
         }
 
-        return res.json() as Promise<GraphApiResponse>;
+        return res.json() as Promise<TableApiResponse>;
       },
     }),
 };
 
-export function useGraphQuery(params: GraphsValues, enabled = true) {
-  return useQuery({ ...graphQueries.get(params), enabled });
+export function useTableQuery(params: GraphsValues, enabled: boolean) {
+  return useQuery({ ...tableQueries.get(params), enabled });
 }

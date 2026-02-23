@@ -20,3 +20,15 @@ export const GraphResponse = t.Object(
   },
   { description: "Graph computation result" },
 );
+
+export const TableResponse = t.Object(
+  {
+    states: t.Array(t.Union([t.String(), t.Integer()])),
+    cells: t.Array(t.Array(t.Union([t.Integer(), t.Null()]))),
+    ground_state: t.Union([t.String(), t.Integer()]),
+    num_states: t.Integer(),
+    max_height: t.Integer(),
+    num_props: t.Integer(),
+  },
+  { description: "State transition table result" },
+);

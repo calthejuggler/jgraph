@@ -3,19 +3,19 @@ use std::fmt;
 use super::state::{MAX_MAX_HEIGHT, State};
 use super::transition::Transition;
 
-/// Parameters for generating a state transition graph.
+/// Parameters for generating a state transition graph or table.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct GraphParams {
+pub struct Params {
     /// The number of props (balls) being juggled.
     pub num_props: u8,
     /// The maximum throw height (number of beat positions in each state).
     pub max_height: u8,
 }
 
-/// Errors that can occur when validating [`GraphParams`].
+/// Errors that can occur when validating [`Params`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GraphParamsError {
+pub enum ParamsError {
     /// The requested `max_height` exceeds [`MAX_MAX_HEIGHT`].
     MaxHeightTooLarge,
     /// The requested `num_props` exceeds [`MAX_MAX_HEIGHT`].
@@ -24,7 +24,7 @@ pub enum GraphParamsError {
     MaxHeightLessThanNumProps,
 }
 
-impl fmt::Display for GraphParamsError {
+impl fmt::Display for ParamsError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::MaxHeightTooLarge => write!(f, "max_height exceeds {MAX_MAX_HEIGHT}"),
@@ -34,24 +34,24 @@ impl fmt::Display for GraphParamsError {
     }
 }
 
-impl std::error::Error for GraphParamsError {}
+impl std::error::Error for ParamsError {}
 
-impl GraphParams {
+impl Params {
     /// Validate that the parameters are within acceptable bounds.
     ///
     /// # Errors
     ///
-    /// Returns a [`GraphParamsError`] if `max_height` or `num_props` exceed
+    /// Returns a [`ParamsError`] if `max_height` or `num_props` exceed
     /// [`MAX_MAX_HEIGHT`], or if `max_height < num_props`.
-    pub const fn validate(&self) -> Result<(), GraphParamsError> {
+    pub const fn validate(&self) -> Result<(), ParamsError> {
         if self.max_height > MAX_MAX_HEIGHT {
-            return Err(GraphParamsError::MaxHeightTooLarge);
+            return Err(ParamsError::MaxHeightTooLarge);
         }
         if self.num_props > MAX_MAX_HEIGHT {
-            return Err(GraphParamsError::NumPropsTooLarge);
+            return Err(ParamsError::NumPropsTooLarge);
         }
         if self.max_height < self.num_props {
-            return Err(GraphParamsError::MaxHeightLessThanNumProps);
+            return Err(ParamsError::MaxHeightLessThanNumProps);
         }
         Ok(())
     }
@@ -89,8 +89,8 @@ pub struct StateGraph {
 ///
 /// # Errors
 ///
-/// Returns a [`GraphParamsError`] if the parameters fail validation.
-pub fn compute_graph(params: &GraphParams) -> Result<StateGraph, GraphParamsError> {
+/// Returns a [`ParamsError`] if the parameters fail validation.
+pub fn compute_graph(params: &Params) -> Result<StateGraph, ParamsError> {
     params.validate()?;
 
     let states = State::generate(params.num_props, params.max_height);
@@ -123,8 +123,8 @@ pub fn compute_graph(params: &GraphParams) -> Result<StateGraph, GraphParamsErro
 mod tests {
     use super::*;
 
-    fn params(num_props: u8, max_height: u8) -> GraphParams {
-        GraphParams {
+    fn params(num_props: u8, max_height: u8) -> Params {
+        Params {
             num_props,
             max_height,
         }
@@ -139,7 +139,7 @@ mod tests {
     fn test_validate_rejects_max_height_above_limit() {
         assert_eq!(
             params(3, MAX_MAX_HEIGHT + 1).validate().unwrap_err(),
-            GraphParamsError::MaxHeightTooLarge
+            ParamsError::MaxHeightTooLarge
         );
     }
 
@@ -147,7 +147,7 @@ mod tests {
     fn test_validate_rejects_num_props_above_limit() {
         assert_eq!(
             params(MAX_MAX_HEIGHT + 1, 5).validate().unwrap_err(),
-            GraphParamsError::NumPropsTooLarge
+            ParamsError::NumPropsTooLarge
         );
     }
 
@@ -155,7 +155,7 @@ mod tests {
     fn test_validate_rejects_max_height_less_than_num_props() {
         assert_eq!(
             params(5, 3).validate().unwrap_err(),
-            GraphParamsError::MaxHeightLessThanNumProps
+            ParamsError::MaxHeightLessThanNumProps
         );
     }
 
@@ -240,10 +240,10 @@ mod tests {
 
     #[test]
     fn test_graph_params_error_display() {
-        assert!(!GraphParamsError::MaxHeightTooLarge.to_string().is_empty());
-        assert!(!GraphParamsError::NumPropsTooLarge.to_string().is_empty());
+        assert!(!ParamsError::MaxHeightTooLarge.to_string().is_empty());
+        assert!(!ParamsError::NumPropsTooLarge.to_string().is_empty());
         assert!(
-            !GraphParamsError::MaxHeightLessThanNumProps
+            !ParamsError::MaxHeightLessThanNumProps
                 .to_string()
                 .is_empty()
         );

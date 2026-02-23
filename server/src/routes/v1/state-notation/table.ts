@@ -1,8 +1,8 @@
 import { Elysia, t } from "elysia";
 
-import { loggingPlugin } from "../../lib/logging";
-import { graphRateLimit } from "../../lib/rate-limit";
-import { ErrorResponse, GraphResponse } from "../../lib/schemas";
+import { loggingPlugin } from "../../../lib/logging";
+import { graphRateLimit } from "../../../lib/rate-limit";
+import { ErrorResponse, TableResponse } from "../../../lib/schemas";
 
 const ENGINE_URL = Bun.env.ENGINE_URL ?? "http://localhost:8000";
 const ENGINE_API_KEY = Bun.env.ENGINE_API_KEY ?? "";
@@ -17,7 +17,7 @@ const STATE_SIZE_TO_MAX: Record<string, number> = {
 };
 const MAX_MAX_HEIGHT = STATE_SIZE_TO_MAX[Bun.env.STATE_SIZE ?? "u32"] ?? 32;
 
-const graphQuerySchema = t.Object({
+const tableQuerySchema = t.Object({
   num_props: t.Integer({
     minimum: 1,
     maximum: MAX_MAX_HEIGHT,
@@ -34,23 +34,23 @@ const graphQuerySchema = t.Object({
     t.Boolean({
       default: false,
       description:
-        "When true, nodes are represented as integers (bitmask). When false, nodes are binary strings",
+        "When true, states are represented as integers (bitmask). When false, states are binary strings",
     }),
   ),
   reversed: t.Optional(
     t.Boolean({
       default: false,
       description:
-        "When true, binary string nodes are displayed LSB-first (reversed). No effect when compact=true",
+        "When true, binary string states are displayed LSB-first (reversed). No effect when compact=true",
     }),
   ),
 });
 
-export const graphsRoute = new Elysia()
+export const tableRoute = new Elysia()
   .use(graphRateLimit)
   .use(loggingPlugin)
   .get(
-    "/graphs",
+    "/table",
     async ({ query, set, headers, wideEvent }) => {
       if (wideEvent) {
         wideEvent.num_props = query.num_props;
@@ -68,7 +68,7 @@ export const graphsRoute = new Elysia()
         });
       }
 
-      const etag = `"v${SCHEMA_VERSION}-${query.num_props}-${query.max_height}-${query.compact ?? false}-${query.reversed ?? false}"`;
+      const etag = `"table-v${SCHEMA_VERSION}-${query.num_props}-${query.max_height}-${query.compact ?? false}-${query.reversed ?? false}"`;
 
       if (headers["if-none-match"] === etag) {
         set.status = 304;
@@ -85,7 +85,7 @@ export const graphsRoute = new Elysia()
 
       let engineRes: Response;
       try {
-        engineRes = await fetch(`${ENGINE_URL}/v1/graphs?${params}`, {
+        engineRes = await fetch(`${ENGINE_URL}/v1/state-notation/table?${params}`, {
           headers: { "X-API-Key": ENGINE_API_KEY },
         });
       } catch {
@@ -117,21 +117,21 @@ export const graphsRoute = new Elysia()
       });
     },
     {
-      query: graphQuerySchema,
+      query: tableQuerySchema,
       response: {
-        200: GraphResponse,
+        200: TableResponse,
         304: t.Void({ description: "Not Modified — client cache is still valid" }),
         400: ErrorResponse,
         429: ErrorResponse,
         503: ErrorResponse,
       },
       detail: {
-        summary: "Compute juggling graph",
+        summary: "Compute state transition table",
         description:
-          "Computes the siteswap state graph for the given parameters. " +
+          "Computes the siteswap state transition table for the given parameters. " +
           "Responses include ETag headers for client-side caching — send If-None-Match to receive 304. " +
           "Rate limited to 30 requests per minute.",
-        tags: ["Graphs v1"],
+        tags: ["State Notation v1"],
       },
     },
   );
