@@ -1,8 +1,6 @@
 use axum::http::StatusCode;
 use serde::Deserialize;
 
-use crate::state::MAX_MAX_HEIGHT;
-
 #[derive(Deserialize)]
 pub struct GraphParams {
     pub num_props: u8,
@@ -15,22 +13,24 @@ pub struct GraphParams {
 
 impl GraphParams {
     pub fn validate(&self) -> Result<(), StatusCode> {
-        if self.max_height > MAX_MAX_HEIGHT {
-            return Err(StatusCode::BAD_REQUEST);
+        self.to_library_params()
+            .validate()
+            .map_err(|_| StatusCode::BAD_REQUEST)
+    }
+
+    pub fn to_library_params(&self) -> juggling_tools::state_notation::GraphParams {
+        juggling_tools::state_notation::GraphParams {
+            num_props: self.num_props,
+            max_height: self.max_height,
         }
-        if self.num_props > MAX_MAX_HEIGHT {
-            return Err(StatusCode::BAD_REQUEST);
-        }
-        if self.max_height < self.num_props {
-            return Err(StatusCode::BAD_REQUEST);
-        }
-        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use juggling_tools::state_notation::MAX_MAX_HEIGHT;
 
     fn params(num_props: u8, max_height: u8) -> GraphParams {
         GraphParams {

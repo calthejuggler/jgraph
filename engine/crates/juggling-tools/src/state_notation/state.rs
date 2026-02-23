@@ -1,7 +1,13 @@
+/// The underlying integer type used to represent juggling state bitmasks.
+///
+/// Selected at compile time via feature flags: `state-u8`, `state-u16`, `state-u64`,
+/// or `state-u128`. Defaults to `u32` when no feature is specified.
 #[cfg(feature = "state-u8")]
 pub type Bits = u8;
+/// The underlying integer type used to represent juggling state bitmasks.
 #[cfg(feature = "state-u16")]
 pub type Bits = u16;
+/// The underlying integer type used to represent juggling state bitmasks.
 #[cfg(not(any(
     feature = "state-u8",
     feature = "state-u16",
@@ -9,41 +15,68 @@ pub type Bits = u16;
     feature = "state-u128"
 )))]
 pub type Bits = u32;
+/// The underlying integer type used to represent juggling state bitmasks.
 #[cfg(feature = "state-u64")]
 pub type Bits = u64;
+/// The underlying integer type used to represent juggling state bitmasks.
 #[cfg(feature = "state-u128")]
 pub type Bits = u128;
 
+/// The maximum allowed throw height, equal to the number of bits in [`Bits`].
+#[allow(clippy::cast_possible_truncation)]
 pub const MAX_MAX_HEIGHT: u8 = Bits::BITS as u8;
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, serde::Serialize)]
+/// A juggling state represented as a bitmask where each set bit indicates a prop
+/// scheduled to land at that beat offset.
+///
+/// The least significant bit represents the current beat (position 0), and higher bits
+/// represent future beats. A state with `num_props` set bits has exactly that many
+/// props in the air.
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct State(Bits);
 
 impl State {
+    /// Create a new state from raw bits, validating that no bits are set above `max_height`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `max_height` exceeds [`MAX_MAX_HEIGHT`], or if any bits
+    /// above position `max_height - 1` are set.
     pub fn new(bits: Bits, max_height: u8) -> Result<Self, String> {
         if max_height > MAX_MAX_HEIGHT {
-            return Err(format!(
-                "max_height {} exceeds {}",
-                max_height, MAX_MAX_HEIGHT
-            ));
+            return Err(format!("max_height {max_height} exceeds {MAX_MAX_HEIGHT}"));
         }
         if max_height < MAX_MAX_HEIGHT && bits >> max_height != 0 {
             return Err(format!(
-                "bits {:#b} has bits set above max_height {}",
-                bits, max_height
+                "bits {bits:#b} has bits set above max_height {max_height}"
             ));
         }
-        Ok(State(bits))
+        Ok(Self(bits))
     }
 
-    pub fn bits(&self) -> Bits {
+    /// Create a state directly from raw bits without validation.
+    ///
+    /// # Safety (logical)
+    ///
+    /// The caller must ensure that no bits above the intended `max_height` are set.
+    /// This is intended for internal use where bit arithmetic already guarantees validity.
+    pub(crate) const fn from_bits(bits: Bits) -> Self {
+        Self(bits)
+    }
+
+    /// Return the raw bitmask underlying this state.
+    pub const fn bits(&self) -> Bits {
         self.0
     }
 
-    pub fn prop_at(&self, pos: u8) -> bool {
+    /// Check whether a prop is scheduled to land at beat offset `pos`.
+    pub const fn prop_at(&self, pos: u8) -> bool {
         (self.0 >> pos) & 1 != 0
     }
 
+    /// Format the state as a human-readable string using `x` for occupied beats
+    /// and `0` for empty beats, most-significant bit first.
     pub fn display(&self, max_height: u8) -> String {
         (0..max_height)
             .rev()
@@ -51,6 +84,7 @@ impl State {
             .collect()
     }
 
+    /// Format the state as a binary string (`1`/`0`), most-significant bit first.
     pub fn to_binary_string(self, max_height: u8) -> String {
         (0..max_height)
             .rev()
@@ -58,20 +92,24 @@ impl State {
             .collect()
     }
 
-    pub fn generate(num_props: u8, max_height: u8) -> Vec<State> {
-        let mut states: Vec<State> = vec![];
+    /// Generate all valid states with exactly `num_props` set bits within `max_height` positions.
+    ///
+    /// States are returned in a deterministic order produced by backtracking enumeration.
+    /// The first state is always the "ground state" (lowest bits set).
+    pub fn generate(num_props: u8, max_height: u8) -> Vec<Self> {
+        let mut states: Vec<Self> = vec![];
         Self::backtrack(max_height, 0, num_props, 0, &mut states);
         states
     }
 
-    fn backtrack(max_height: u8, pos: u8, props_left: u8, current: Bits, states: &mut Vec<State>) {
+    fn backtrack(max_height: u8, pos: u8, props_left: u8, current: Bits, states: &mut Vec<Self>) {
         let remaining = max_height - pos;
         if props_left > remaining {
             return;
         }
         if pos == max_height {
             if props_left == 0 {
-                states.push(State(current));
+                states.push(Self(current));
             }
             return;
         }
@@ -154,7 +192,7 @@ mod tests {
 
     #[test]
     fn test_generate_count_matches_combinations() {
-        use crate::cache::precompute::combinations;
+        use crate::util::combinations;
         let cases = [(3, 5), (2, 4), (4, 8), (1, 3), (5, 5)];
         for (n, k) in cases {
             let states = State::generate(n, k);

@@ -44,6 +44,27 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy -- -D warnings
 
+  juggling-tools-check:
+    name: Juggling Tools Lint & Doc
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "engine -> target"
+      - run: cargo clippy -p juggling-tools --features serde
+      - run: cargo test -p juggling-tools --features serde
+      - name: Check docs
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+        run: cargo doc -p juggling-tools --features serde --no-deps
+
   engine-test:
     name: Engine Test
     runs-on: ubuntu-latest

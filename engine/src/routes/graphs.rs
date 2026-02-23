@@ -9,8 +9,6 @@ use crate::cache::memory::fits_in_memory;
 use crate::cache::redis::fits_in_redis;
 use crate::graph::GraphParams;
 use crate::logging::WideEventHandle;
-use crate::state::State;
-use crate::transition::Transition;
 
 pub async fn get_graph_query(
     AxumState(app): AxumState<crate::AppState>,
@@ -124,10 +122,10 @@ pub fn compute_graph(params: &GraphParams) -> Vec<u8> {
     let num_props = params.num_props;
     let reversed = params.reversed;
 
-    let states = State::generate(num_props, max_height);
-    let num_nodes = states.len();
+    let graph = juggling_tools::state_notation::compute_graph(&params.to_library_params())
+        .expect("params should be validated before calling compute_graph");
 
-    let state_value = |s: &State| -> String {
+    let state_value = |s: &juggling_tools::state_notation::State| -> String {
         if compact {
             s.bits().to_string()
         } else {
@@ -145,7 +143,7 @@ pub fn compute_graph(params: &GraphParams) -> Vec<u8> {
 
     buf.push_str("{\"nodes\":[");
 
-    for (i, state) in states.iter().enumerate() {
+    for (i, state) in graph.states.iter().enumerate() {
         if i > 0 {
             buf.push(',');
         }
@@ -154,32 +152,26 @@ pub fn compute_graph(params: &GraphParams) -> Vec<u8> {
 
     buf.push_str("],\"edges\":[");
 
-    let mut num_edges: usize = 0;
-    let mut first_edge = true;
+    let num_edges = graph.edges.len();
 
-    for state in &states {
-        let transitions = Transition::from_state(*state, max_height);
-        for t in &transitions {
-            if !first_edge {
-                buf.push(',');
-            }
-            first_edge = false;
-            num_edges += 1;
-
-            buf.push_str("{\"from\":");
-            buf.push_str(&state_value(&t.from()));
-            buf.push_str(",\"to\":");
-            buf.push_str(&state_value(&t.to()));
-            buf.push_str(",\"throw_height\":");
-            buf.push_str(&t.throw_height().to_string());
-            buf.push('}');
+    for (i, edge) in graph.edges.iter().enumerate() {
+        if i > 0 {
+            buf.push(',');
         }
+
+        buf.push_str("{\"from\":");
+        buf.push_str(&state_value(&edge.from));
+        buf.push_str(",\"to\":");
+        buf.push_str(&state_value(&edge.to));
+        buf.push_str(",\"throw_height\":");
+        buf.push_str(&edge.throw_height.to_string());
+        buf.push('}');
     }
 
     buf.push_str("],\"ground_state\":");
-    buf.push_str(&state_value(&states[0]));
+    buf.push_str(&state_value(&graph.ground_state));
     buf.push_str(",\"num_nodes\":");
-    buf.push_str(&num_nodes.to_string());
+    buf.push_str(&graph.states.len().to_string());
     buf.push_str(",\"num_edges\":");
     buf.push_str(&num_edges.to_string());
     buf.push_str(",\"max_height\":");
@@ -236,7 +228,7 @@ mod tests {
 
     #[test]
     fn test_compute_graph_node_count_matches() {
-        use crate::cache::precompute::combinations;
+        use juggling_tools::util::combinations;
         let params = make_params(3, 5, false);
         let json = parse(&params);
         let num_nodes = json["num_nodes"].as_u64().unwrap() as usize;

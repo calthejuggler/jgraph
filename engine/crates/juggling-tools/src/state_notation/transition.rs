@@ -1,8 +1,14 @@
 use std::fmt::Display;
 
-use crate::state::State;
+use super::state::State;
 
-#[derive(Debug, serde::Serialize)]
+/// A single transition from one juggling [`State`] to another, representing a throw
+/// of a specific height.
+///
+/// Each transition records the source and destination states, the throw height that
+/// caused the transition, and the `max_height` context needed for display formatting.
+#[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Transition {
     from: State,
     to: State,
@@ -22,45 +28,57 @@ impl Display for Transition {
 }
 
 impl Transition {
-    pub fn from(&self) -> State {
+    /// Return the source state of this transition.
+    pub const fn from(&self) -> State {
         self.from
     }
 
-    pub fn to(&self) -> State {
+    /// Return the destination state of this transition.
+    pub const fn to(&self) -> State {
         self.to
     }
 
-    pub fn throw_height(&self) -> u8 {
+    /// Return the throw height that causes this transition.
+    pub const fn throw_height(&self) -> u8 {
         self.throw_height
     }
 
-    pub fn from_state(state: State, max_height: u8) -> Vec<Transition> {
-        let mut transitions: Vec<Transition> = vec![];
+    /// Compute all valid transitions from the given `state` within `max_height`.
+    ///
+    /// If the rightmost bit (position 0) is empty, the only transition is a zero-throw
+    /// (time step with no catch). If a prop is landing (rightmost bit set), one transition
+    /// is generated for each unoccupied future beat the prop could be thrown to.
+    pub fn from_state(state: State, max_height: u8) -> Vec<Self> {
+        let mut transitions: Vec<Self> = vec![];
 
         let rightmost = state.bits() & 1 != 0;
         let shifted = state.bits() >> 1;
 
-        if !rightmost {
-            transitions.push(Transition {
-                from: state,
-                to: State::new(shifted, max_height).unwrap(),
-                throw_height: 0,
-                max_height,
-            });
-        } else {
+        if rightmost {
             for bit_pos in 0..max_height {
                 if (shifted >> bit_pos) & 1 == 0 {
                     let new_bits = shifted | (1 << bit_pos);
                     let throw_height = bit_pos + 1;
 
-                    transitions.push(Transition {
+                    transitions.push(Self {
                         from: state,
-                        to: State::new(new_bits, max_height).unwrap(),
+                        // SAFETY (logical): new_bits sets at most bit (max_height - 1)
+                        // because bit_pos < max_height and shifted had no bits >= max_height.
+                        to: State::from_bits(new_bits),
                         throw_height,
                         max_height,
                     });
                 }
             }
+        } else {
+            transitions.push(Self {
+                from: state,
+                // SAFETY (logical): shifted has strictly fewer bits set than state,
+                // which was already valid for max_height.
+                to: State::from_bits(shifted),
+                throw_height: 0,
+                max_height,
+            });
         }
 
         transitions
@@ -71,7 +89,7 @@ impl Transition {
 mod tests {
     use super::*;
 
-    use crate::state::Bits;
+    use super::super::state::Bits;
 
     fn state(bits: Bits, max_height: u8) -> State {
         State::new(bits, max_height).unwrap()
@@ -131,7 +149,7 @@ mod tests {
     #[test]
     fn test_preserves_prop_count() {
         let max_height = 5;
-        let states = crate::state::State::generate(3, max_height);
+        let states = State::generate(3, max_height);
         for s in &states {
             let transitions = Transition::from_state(*s, max_height);
             for t in &transitions {
@@ -149,7 +167,7 @@ mod tests {
     #[test]
     fn test_to_states_within_bounds() {
         let max_height: u8 = 5;
-        let states = crate::state::State::generate(3, max_height);
+        let states = State::generate(3, max_height);
         for s in &states {
             let transitions = Transition::from_state(*s, max_height);
             for t in &transitions {
@@ -184,7 +202,7 @@ mod tests {
     #[test]
     fn test_all_states_have_transitions() {
         let max_height = 5;
-        let states = crate::state::State::generate(3, max_height);
+        let states = State::generate(3, max_height);
         for s in &states {
             let transitions = Transition::from_state(*s, max_height);
             assert!(

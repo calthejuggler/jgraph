@@ -39,5 +39,5 @@ Checklist of features from the [State Notation wiki](https://juggle.fandom.com/w
 
 ### Distribution
 
-- [ ] Rust crate
+- [x] Rust crate
 - [ ] Production deployment

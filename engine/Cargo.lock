@@ -186,6 +186,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "bytes",
+ "juggling-tools",
  "moka",
  "redis",
  "serde",
@@ -558,6 +559,13 @@ checksum = "c7e709f3e3d22866f9c25b3aff01af289b18422cc8b4262fb19103ee80fe513d"
 dependencies = [
  "once_cell",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "juggling-tools"
+version = "0.1.0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
