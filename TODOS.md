@@ -17,7 +17,7 @@ Checklist of features from the [State Notation wiki](https://juggle.fandom.com/w
 
 ### Core Engine
 
-- [ ] Abbreviated state notation, e.g. `111` -> `000`
+- [x] Abbreviated state notation, e.g. `111` -> `000`
 - [ ] Prime vs composite siteswap detection
 - [ ] Multiplex states
 - [ ] Synchronous/async states

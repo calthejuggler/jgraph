@@ -17,6 +17,8 @@ interface QueryFormProps {
   onFieldChange: () => void;
   reversed: boolean;
   onReversedChange: (checked: boolean) => void;
+  abbreviated: boolean;
+  onAbbreviatedChange: (checked: boolean) => void;
   isFetching: boolean;
   error: Error | null;
   view: ViewType;
@@ -29,6 +31,8 @@ export function QueryForm({
   onFieldChange,
   reversed,
   onReversedChange,
+  abbreviated,
+  onAbbreviatedChange,
   isFetching,
   error,
   view,
@@ -94,11 +98,33 @@ export function QueryForm({
             )}
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Switch id="reversed" size="sm" checked={reversed} onCheckedChange={onReversedChange} />
-          <Label htmlFor="reversed" className="text-xs font-normal">
-            Reverse notation
-          </Label>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="abbreviated"
+              size="sm"
+              checked={abbreviated}
+              onCheckedChange={onAbbreviatedChange}
+            />
+            <Label htmlFor="abbreviated" className="text-xs font-normal">
+              Abbreviated notation
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="reversed"
+              size="sm"
+              checked={reversed}
+              onCheckedChange={onReversedChange}
+              disabled={abbreviated}
+            />
+            <Label
+              htmlFor="reversed"
+              className={`text-xs font-normal ${abbreviated ? "text-muted-foreground" : ""}`}
+            >
+              Reverse notation
+            </Label>
+          </div>
         </div>
         <div className="space-y-1">
           <Label className="text-xs font-normal">View</Label>

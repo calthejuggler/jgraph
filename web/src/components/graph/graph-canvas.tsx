@@ -29,6 +29,8 @@ interface GraphCanvasProps {
   data: GraphApiResponse | undefined;
   reversed: boolean;
   onReversedChange: (checked: boolean) => void;
+  abbreviated: boolean;
+  onAbbreviatedChange: (checked: boolean) => void;
   form: UseFormReturn<GraphsValues>;
   onSubmit: (values: GraphsValues) => void;
   onFieldChange: () => void;
@@ -42,6 +44,8 @@ export function GraphCanvas({
   data,
   reversed,
   onReversedChange,
+  abbreviated,
+  onAbbreviatedChange,
   form,
   onSubmit,
   onFieldChange,
@@ -51,11 +55,13 @@ export function GraphCanvas({
   onViewChange,
 }: GraphCanvasProps) {
   const { theme } = useTheme();
-  const layout = useGraphLayout(data, reversed);
+  const layout = useGraphLayout(data, reversed, abbreviated);
 
   const isLayoutPending = !!data && !layout;
   const isLoading = isFetching || isLayoutPending;
-  const key = layout ? `${data!.num_props}-${data!.max_height}-${reversed}` : "empty";
+  const key = layout
+    ? `${data!.num_props}-${data!.max_height}-${reversed}-${abbreviated}`
+    : "empty";
 
   return (
     <ReactFlow
@@ -81,6 +87,8 @@ export function GraphCanvas({
         onFieldChange={onFieldChange}
         reversed={reversed}
         onReversedChange={onReversedChange}
+        abbreviated={abbreviated}
+        onAbbreviatedChange={onAbbreviatedChange}
         isFetching={isLoading}
         error={error}
         view={view}

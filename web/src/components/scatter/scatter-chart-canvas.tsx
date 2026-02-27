@@ -14,6 +14,8 @@ interface ScatterChartCanvasProps {
   data: TableApiResponse | undefined;
   reversed: boolean;
   onReversedChange: (checked: boolean) => void;
+  abbreviated: boolean;
+  onAbbreviatedChange: (checked: boolean) => void;
   form: UseFormReturn<GraphsValues>;
   onSubmit: (values: GraphsValues) => void;
   onFieldChange: () => void;
@@ -27,6 +29,8 @@ export function ScatterChartCanvas({
   data,
   reversed,
   onReversedChange,
+  abbreviated,
+  onAbbreviatedChange,
   form,
   onSubmit,
   onFieldChange,
@@ -46,6 +50,8 @@ export function ScatterChartCanvas({
               onFieldChange={onFieldChange}
               reversed={reversed}
               onReversedChange={onReversedChange}
+              abbreviated={abbreviated}
+              onAbbreviatedChange={onAbbreviatedChange}
               isFetching={isFetching}
               error={error}
               view={view}
@@ -58,7 +64,7 @@ export function ScatterChartCanvas({
         {data ? (
           <Card className="h-full min-h-0 gap-0 overflow-hidden border-0 py-0">
             <CardContent className="h-full min-h-0 overflow-auto px-0">
-              <ScatterChartView data={data} reversed={reversed} />
+              <ScatterChartView data={data} reversed={reversed} abbreviated={abbreviated} />
             </CardContent>
           </Card>
         ) : isFetching ? (

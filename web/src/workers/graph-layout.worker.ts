@@ -5,6 +5,7 @@ export interface LayoutRequest {
   id: number;
   data: GraphApiResponse;
   reversed: boolean;
+  abbreviated: boolean;
 }
 
 export interface LayoutResponse {
@@ -13,7 +14,7 @@ export interface LayoutResponse {
 }
 
 self.onmessage = (event: MessageEvent<LayoutRequest>) => {
-  const { id, data, reversed } = event.data;
-  const layout = computeGraphLayout(data, reversed);
+  const { id, data, reversed, abbreviated } = event.data;
+  const layout = computeGraphLayout(data, reversed, abbreviated);
   self.postMessage({ id, layout } satisfies LayoutResponse);
 };

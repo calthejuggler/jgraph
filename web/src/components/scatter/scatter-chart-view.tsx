@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { CartesianGrid, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis } from "recharts";
 
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
-import { toBinaryLabel } from "@/lib/binary-label";
+import { toAbbreviatedLabel, toBinaryLabel } from "@/lib/binary-label";
 import type { TableApiResponse } from "@/lib/table-types";
 
 interface ScatterPoint {
@@ -17,6 +17,7 @@ interface ScatterPoint {
 interface ScatterChartViewProps {
   data: TableApiResponse;
   reversed: boolean;
+  abbreviated: boolean;
 }
 
 const chartConfig = {
@@ -55,13 +56,17 @@ function CustomTooltip({
   );
 }
 
-export function ScatterChartView({ data, reversed }: ScatterChartViewProps) {
+export function ScatterChartView({ data, reversed, abbreviated }: ScatterChartViewProps) {
   const labels = useMemo(
     () =>
       data.states.map((s) =>
-        typeof s === "number" ? toBinaryLabel(s, data.max_height, reversed) : s,
+        typeof s === "number"
+          ? abbreviated
+            ? toAbbreviatedLabel(s, data.max_height)
+            : toBinaryLabel(s, data.max_height, reversed)
+          : s,
       ),
-    [data, reversed],
+    [data, reversed, abbreviated],
   );
 
   const points = useMemo(() => {

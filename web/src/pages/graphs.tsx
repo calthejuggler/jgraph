@@ -26,6 +26,15 @@ export function GraphsPage() {
     localStorage.setItem("juggling-tools-reversed", String(checked));
   }, []);
 
+  const [abbreviated, setAbbreviated] = useState(
+    () => localStorage.getItem("juggling-tools-abbreviated") === "true",
+  );
+
+  const handleAbbreviatedChange = useCallback((checked: boolean) => {
+    setAbbreviated(checked);
+    localStorage.setItem("juggling-tools-abbreviated", String(checked));
+  }, []);
+
   const submitted: GraphsValues = { num_props, max_height };
 
   const form = useForm<GraphsValues>({
@@ -79,6 +88,8 @@ export function GraphsPage() {
           data={graphData}
           reversed={reversed}
           onReversedChange={handleReversedChange}
+          abbreviated={abbreviated}
+          onAbbreviatedChange={handleAbbreviatedChange}
           form={form}
           onSubmit={onSubmit}
           onFieldChange={onFieldChange}
@@ -92,6 +103,8 @@ export function GraphsPage() {
           data={tableData}
           reversed={reversed}
           onReversedChange={handleReversedChange}
+          abbreviated={abbreviated}
+          onAbbreviatedChange={handleAbbreviatedChange}
           form={form}
           onSubmit={onSubmit}
           onFieldChange={onFieldChange}
@@ -105,6 +118,8 @@ export function GraphsPage() {
           data={tableData}
           reversed={reversed}
           onReversedChange={handleReversedChange}
+          abbreviated={abbreviated}
+          onAbbreviatedChange={handleAbbreviatedChange}
           form={form}
           onSubmit={onSubmit}
           onFieldChange={onFieldChange}

@@ -36,6 +36,16 @@ pub const MAX_MAX_HEIGHT: u8 = Bits::BITS as u8;
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct State(Bits);
 
+/// Convert a numeric value to its siteswap character: 0–9 map to `'0'`–`'9'`,
+/// 10–35 map to `'a'`–`'z'`.
+fn siteswap_char(n: u8) -> char {
+    match n {
+        0..=9 => (b'0' + n) as char,
+        10..=35 => (b'a' + n - 10) as char,
+        _ => '?',
+    }
+}
+
 impl State {
     /// Create a new state from raw bits, validating that no bits are set above `max_height`.
     ///
@@ -90,6 +100,25 @@ impl State {
             .rev()
             .map(|i| if self.prop_at(i) { '1' } else { '0' })
             .collect()
+    }
+
+    /// Format the state using abbreviated notation, where each digit counts the gap
+    /// (number of zeros) before the next set bit, scanning from MSB to LSB.
+    ///
+    /// The output has exactly `num_props` digits (one per set bit). Gaps of 10 or more
+    /// use siteswap letter notation (`a`=10, `b`=11, ..., `z`=35).
+    pub fn to_abbreviated_string(self, max_height: u8) -> String {
+        let mut result = String::new();
+        let mut gap: u8 = 0;
+        for pos in (0..max_height).rev() {
+            if self.prop_at(pos) {
+                result.push(siteswap_char(gap));
+                gap = 0;
+            } else {
+                gap += 1;
+            }
+        }
+        result
     }
 
     /// Generate all valid states with exactly `num_props` set bits within `max_height` positions.
@@ -256,5 +285,51 @@ mod tests {
         .into_iter()
         .collect();
         assert_eq!(bits, expected);
+    }
+
+    #[test]
+    fn test_abbreviated_all_ones() {
+        // 111 (3 props, max_height 3) → "000"
+        let s = State::new(0b111, 3).unwrap();
+        assert_eq!(s.to_abbreviated_string(3), "000");
+    }
+
+    #[test]
+    fn test_abbreviated_01101() {
+        // 01101 (3 props, max_height 5) → "101"
+        let s = State::new(0b01101, 5).unwrap();
+        assert_eq!(s.to_abbreviated_string(5), "101");
+    }
+
+    #[test]
+    fn test_abbreviated_101001() {
+        // 101001 (3 props, max_height 6) → "012"
+        let s = State::new(0b101001, 6).unwrap();
+        assert_eq!(s.to_abbreviated_string(6), "012");
+    }
+
+    #[test]
+    fn test_abbreviated_ground_state() {
+        // Ground state: 3 props / 5 max_height → 00111 → "200"
+        let s = State::new(0b00111, 5).unwrap();
+        assert_eq!(s.to_abbreviated_string(5), "200");
+    }
+
+    #[test]
+    fn test_abbreviated_output_length_equals_num_props() {
+        for (num_props, max_height) in [(3, 5), (2, 4), (4, 8), (1, 3), (5, 5)] {
+            let states = State::generate(num_props, max_height);
+            for s in &states {
+                assert_eq!(
+                    s.to_abbreviated_string(max_height).len(),
+                    num_props as usize,
+                    "abbreviated length for state {:b} (num_props={}, max_height={}) should be {}",
+                    s.bits(),
+                    num_props,
+                    max_height,
+                    num_props,
+                );
+            }
+        }
     }
 }

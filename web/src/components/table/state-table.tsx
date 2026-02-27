@@ -9,29 +9,36 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-import { toBinaryLabel } from "@/lib/binary-label";
+import { toAbbreviatedLabel, toBinaryLabel } from "@/lib/binary-label";
 import type { TableApiResponse } from "@/lib/table-types";
 
 interface StateTableProps {
   data: TableApiResponse;
   reversed: boolean;
+  abbreviated: boolean;
 }
 
-export function StateTable({ data, reversed }: StateTableProps) {
+export function StateTable({ data, reversed, abbreviated }: StateTableProps) {
   const labels = useMemo(
     () =>
       data.states.map((s) =>
-        typeof s === "number" ? toBinaryLabel(s, data.max_height, reversed) : s,
+        typeof s === "number"
+          ? abbreviated
+            ? toAbbreviatedLabel(s, data.max_height)
+            : toBinaryLabel(s, data.max_height, reversed)
+          : s,
       ),
-    [data, reversed],
+    [data, reversed, abbreviated],
   );
 
   const groundLabel = useMemo(
     () =>
       typeof data.ground_state === "number"
-        ? toBinaryLabel(data.ground_state, data.max_height, reversed)
+        ? abbreviated
+          ? toAbbreviatedLabel(data.ground_state, data.max_height)
+          : toBinaryLabel(data.ground_state, data.max_height, reversed)
         : data.ground_state,
-    [data, reversed],
+    [data, reversed, abbreviated],
   );
 
   const columnHelper = createColumnHelper<(number | null)[]>();

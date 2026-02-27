@@ -1,34 +1,41 @@
 import dagre from "dagre";
 
-import { toBinaryLabel } from "./binary-label";
+import { toAbbreviatedLabel, toBinaryLabel } from "./binary-label";
 import type { ExpandedGraphResponse, GraphApiResponse, GraphEdge, GraphNode } from "./graph-types";
 
 const NODE_WIDTH = 120;
 const NODE_HEIGHT = 40;
 
-function expandCompactResponse(data: GraphApiResponse, reversed: boolean): ExpandedGraphResponse {
+function expandCompactResponse(
+  data: GraphApiResponse,
+  reversed: boolean,
+  abbreviated: boolean,
+): ExpandedGraphResponse {
   const { max_height, nodes, edges, ground_state, ...rest } = data;
+  const label = (n: number) =>
+    abbreviated ? toAbbreviatedLabel(n, max_height) : toBinaryLabel(n, max_height, reversed);
   return {
     ...rest,
     max_height,
-    nodes: nodes.map((n) => toBinaryLabel(n, max_height, reversed)),
+    nodes: nodes.map(label),
     edges: edges.map((e) => ({
-      from: toBinaryLabel(e.from, max_height, reversed),
-      to: toBinaryLabel(e.to, max_height, reversed),
+      from: label(e.from),
+      to: label(e.to),
       throw_height: e.throw_height,
     })),
-    ground_state: toBinaryLabel(ground_state, max_height, reversed),
+    ground_state: label(ground_state),
   };
 }
 
 export function computeGraphLayout(
   data: GraphApiResponse,
   reversed: boolean,
+  abbreviated: boolean,
 ): {
   nodes: GraphNode[];
   edges: GraphEdge[];
 } {
-  const expanded = expandCompactResponse(data, reversed);
+  const expanded = expandCompactResponse(data, reversed, abbreviated);
   const g = new dagre.graphlib.Graph();
   g.setGraph({ rankdir: "TB" });
   g.setDefaultEdgeLabel(() => ({}));

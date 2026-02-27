@@ -17,6 +17,8 @@ interface GraphQueryPanelProps {
   onFieldChange: () => void;
   reversed: boolean;
   onReversedChange: (checked: boolean) => void;
+  abbreviated: boolean;
+  onAbbreviatedChange: (checked: boolean) => void;
   isFetching: boolean;
   error: Error | null;
   view: ViewType;
@@ -29,6 +31,8 @@ export function GraphQueryPanel({
   onFieldChange,
   reversed,
   onReversedChange,
+  abbreviated,
+  onAbbreviatedChange,
   isFetching,
   error,
   view,
@@ -60,6 +64,8 @@ export function GraphQueryPanel({
               onFieldChange={onFieldChange}
               reversed={reversed}
               onReversedChange={onReversedChange}
+              abbreviated={abbreviated}
+              onAbbreviatedChange={onAbbreviatedChange}
               isFetching={isFetching}
               error={error}
               view={view}
