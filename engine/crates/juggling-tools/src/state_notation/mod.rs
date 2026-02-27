@@ -6,6 +6,8 @@ mod graph;
 mod state;
 /// State transition table generation.
 mod table;
+/// All valid throws from a single juggling state.
+mod throws;
 /// Transitions between juggling states (throws and catches).
 mod transition;
 
@@ -13,4 +15,5 @@ pub use compute::{TransitionSet, compute_transitions};
 pub use graph::{Edge, Params, ParamsError, StateGraph, compute_graph};
 pub use state::{Bits, MAX_MAX_HEIGHT, State};
 pub use table::{StateTable, compute_table};
+pub use throws::{Throw, compute_throws};
 pub use transition::Transition;
