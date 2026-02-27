@@ -35,6 +35,7 @@ export interface ExpandedGraphResponse {
 export interface GraphNodeData {
   label: string;
   isBase: boolean;
+  isCurrent?: boolean;
   [key: string]: unknown;
 }
 

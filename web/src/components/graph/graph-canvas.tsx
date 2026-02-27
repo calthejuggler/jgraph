@@ -17,6 +17,7 @@ import type { GraphsValues } from "@/lib/schemas";
 import type { ViewType } from "@/lib/view-types";
 
 import { GraphDetailsPanel } from "./graph-details-panel";
+import { graphEdgeTypes } from "./graph-edge";
 import { graphNodeTypes } from "./graph-node";
 import { GraphQueryPanel } from "./graph-query-panel";
 
@@ -69,6 +70,7 @@ export function GraphCanvas({
       defaultNodes={layout?.nodes ?? EMPTY_NODES}
       defaultEdges={layout?.edges ?? EMPTY_EDGES}
       nodeTypes={graphNodeTypes}
+      edgeTypes={graphEdgeTypes}
       nodesConnectable={false}
       edgesFocusable={false}
       nodesFocusable={false}

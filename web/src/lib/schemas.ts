@@ -28,3 +28,15 @@ export const graphsSchema = z
   });
 
 export type GraphsValues = z.infer<typeof graphsSchema>;
+
+export const builderSchema = z
+  .object({
+    num_props: z.number().int().min(1).max(UI_MAX_HEIGHT),
+    max_height: z.number().int().min(1).max(UI_MAX_HEIGHT),
+  })
+  .refine((data) => data.max_height >= data.num_props, {
+    message: "Max height must be >= number of props",
+    path: ["max_height"],
+  });
+
+export type BuilderValues = z.infer<typeof builderSchema>;

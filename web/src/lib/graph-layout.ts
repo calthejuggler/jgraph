@@ -64,6 +64,7 @@ export function computeGraphLayout(
 
   const edges: GraphEdge[] = expanded.edges.map((edge) => ({
     id: `e-${edge.from}-${edge.to}-${edge.throw_height}`,
+    type: "graphEdge",
     source: edge.from,
     target: edge.to,
     label: String(edge.throw_height),
