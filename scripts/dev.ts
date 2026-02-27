@@ -26,7 +26,7 @@ async function ensureDeps() {
     const nodeModules = resolve(ROOT, dir, "node_modules");
     if (!existsSync(nodeModules)) {
       log("infra", `Installing dependencies in ${dir}/...`);
-      const proc = Bun.spawn(["bun", "install"], {
+      const proc = Bun.spawn(["bun", "install", "--frozen-lockfile"], {
         cwd: resolve(ROOT, dir),
         stdout: "inherit",
         stderr: "inherit",

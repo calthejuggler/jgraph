@@ -1,4 +1,5 @@
-FROM oven/bun:latest AS builder
+ARG BUN_VERSION=1.3.10
+FROM oven/bun:${BUN_VERSION}-alpine AS builder
 WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile

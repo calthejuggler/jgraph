@@ -23,6 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
       - run: bun install --frozen-lockfile
       - run: bun run lint
       - run: bun run format:check
@@ -101,6 +103,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
       - run: bun install --frozen-lockfile
       - run: bunx tsc --noEmit
 
@@ -109,11 +113,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Get Bun version
+        id: bun-version
+        run: echo "version=$(jq -r '.packageManager' package.json | sed 's/bun@//')" >> $GITHUB_OUTPUT
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
           context: server
           push: false
+          build-args: BUN_VERSION=${{ steps.bun-version.outputs.version }}
           cache-from: type=gha,scope=server
           cache-to: type=gha,scope=server,mode=max
 
@@ -126,6 +134,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
       - run: bun install --frozen-lockfile
       - run: bun run build
 
@@ -134,10 +144,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Get Bun version
+        id: bun-version
+        run: echo "version=$(jq -r '.packageManager' package.json | sed 's/bun@//')" >> $GITHUB_OUTPUT
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
           context: web
           push: false
+          build-args: BUN_VERSION=${{ steps.bun-version.outputs.version }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,scope=web,mode=max
