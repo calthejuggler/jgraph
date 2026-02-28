@@ -8,7 +8,7 @@ import {
   MiniMap,
   ReactFlow,
 } from "@xyflow/react";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 import { useGraphLayout } from "@/hooks/use-graph-layout";
 import { useTheme } from "@/hooks/use-theme";
@@ -97,7 +97,16 @@ export function GraphCanvas({
         onViewChange={onViewChange}
       />
       <GraphDetailsPanel nodeCount={data?.num_nodes} edgeCount={data?.num_edges} />
-      {!layout && isLoading && (
+      {!layout && !isLoading && error && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-2">
+            <AlertCircle className="text-destructive h-8 w-8" />
+            <p className="text-destructive text-lg">Failed to load graph</p>
+            <p className="text-muted-foreground text-sm">{error.message}</p>
+          </div>
+        </div>
+      )}
+      {!layout && isLoading && !error && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />

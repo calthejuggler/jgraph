@@ -1,6 +1,6 @@
 import type { UseFormReturn } from "react-hook-form";
 
-import { Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { GraphsValues } from "@/lib/schemas";
@@ -67,6 +67,14 @@ export function ScatterChartCanvas({
               <ScatterChartView data={data} reversed={reversed} abbreviated={abbreviated} />
             </CardContent>
           </Card>
+        ) : error ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <AlertCircle className="text-destructive h-8 w-8" />
+              <p className="text-destructive text-lg">Failed to load scatter chart</p>
+              <p className="text-muted-foreground text-sm">{error.message}</p>
+            </div>
+          </div>
         ) : isFetching ? (
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center gap-2">
