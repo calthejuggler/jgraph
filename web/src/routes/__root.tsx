@@ -3,7 +3,10 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
+import { initI18n } from "@/lib/i18n";
 import { queryClient } from "@/lib/query-client";
+
+initI18n();
 
 export const Route = createRootRoute({
   component: RootLayout,

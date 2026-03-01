@@ -11,6 +11,8 @@ import type { ViewType } from "@/lib/view-types";
 
 import { QueryForm } from "../query-form";
 
+import { m } from "@/paraglide/messages.js";
+
 interface GraphQueryPanelProps {
   form: UseFormReturn<GraphsValues>;
   onSubmit: (values: GraphsValues) => void;
@@ -45,7 +47,7 @@ export function GraphQueryPanel({
       <Card className="w-72 shadow-lg">
         <div className="flex items-center justify-between px-4 pt-3 pb-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">Query</span>
+            <span className="text-sm font-semibold">{m.query_label()}</span>
           </div>
           <Button
             variant="ghost"

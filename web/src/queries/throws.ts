@@ -1,7 +1,10 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { API_URL } from "@/lib/api";
+import { HttpError } from "@/lib/http-error";
 import type { ThrowsApiResponse } from "@/lib/throws-types";
+
+import { m } from "@/paraglide/messages.js";
 
 interface ThrowsParams {
   state: number;
@@ -16,7 +19,7 @@ export const throwsQueries = {
       queryKey: [...throwsQueries.gets(), params] as const,
       staleTime: Infinity,
       retry: (_failureCount: number, error: Error) =>
-        !error.message.startsWith("Too many requests"),
+        !(error instanceof HttpError && error.status === 429),
       queryFn: async ({ signal }) => {
         const searchParams = new URLSearchParams({
           state: String(params.state),
@@ -32,12 +35,15 @@ export const throwsQueries = {
         if (res.status === 429) {
           const retryAfter = res.headers.get("Retry-After");
           const seconds = retryAfter ? parseInt(retryAfter, 10) : 60;
-          throw new Error(`Too many requests. Please try again in ${seconds} seconds.`);
+          throw new HttpError(429, m.query_rate_limit({ seconds: String(seconds) }));
         }
 
         if (!res.ok) {
           const text = await res.text();
-          throw new Error(text || `Request failed with status ${res.status}`);
+          throw new HttpError(
+            res.status,
+            text || m.query_request_failed_status({ status: String(res.status) }),
+          );
         }
 
         return res.json() as Promise<ThrowsApiResponse>;

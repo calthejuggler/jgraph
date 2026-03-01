@@ -11,6 +11,8 @@ import type { ViewType } from "@/lib/view-types";
 import { QueryForm } from "../query-form";
 import { StateTable } from "./state-table";
 
+import { m } from "@/paraglide/messages.js";
+
 interface StateTableCanvasProps {
   data: TableApiResponse | undefined;
   reversed: boolean;
@@ -82,7 +84,7 @@ export function StateTableCanvas({
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center gap-2">
               <AlertCircle className="text-destructive h-8 w-8" />
-              <p className="text-destructive text-lg">Failed to load table</p>
+              <p className="text-destructive text-lg">{m.table_failed_to_load()}</p>
               <p className="text-muted-foreground text-sm">{error.message}</p>
             </div>
           </div>
@@ -90,7 +92,7 @@ export function StateTableCanvas({
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-              <p className="text-muted-foreground text-lg">Loading table...</p>
+              <p className="text-muted-foreground text-lg">{m.table_loading()}</p>
             </div>
           </div>
         ) : null}

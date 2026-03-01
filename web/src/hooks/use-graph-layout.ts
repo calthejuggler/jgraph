@@ -4,6 +4,8 @@ import type { GraphApiResponse, GraphEdge, GraphNode } from "@/lib/graph-types";
 import type { LayoutPhase, WorkerMessage } from "@/workers/graph-layout.worker";
 import GraphLayoutWorker from "@/workers/graph-layout.worker?worker";
 
+import { m } from "@/paraglide/messages.js";
+
 export interface GraphLayout {
   nodes: GraphNode[];
   edges: GraphEdge[];
@@ -17,11 +19,11 @@ export interface LayoutProgress {
 }
 
 export const PHASE_LABELS: Record<LayoutPhase, string> = {
-  expanding: "Expanding labels...",
-  "building-graph": "Building graph...",
-  "computing-layout": "Computing layout...",
-  positioning: "Positioning nodes...",
-  finalizing: "Finalizing edges...",
+  expanding: m.graph_phase_expanding(),
+  "building-graph": m.graph_phase_building(),
+  "computing-layout": m.graph_phase_computing(),
+  positioning: m.graph_phase_positioning(),
+  finalizing: m.graph_phase_finalizing(),
 };
 
 const worker = new GraphLayoutWorker();

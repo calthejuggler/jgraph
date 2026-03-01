@@ -5,6 +5,8 @@ import { toBinaryLabel } from "@/lib/binary-label";
 import type { ThrowOption } from "@/lib/throws-types";
 import { cn } from "@/lib/utils";
 
+import { m } from "@/paraglide/messages.js";
+
 interface ThrowPickerProps {
   throws: ThrowOption[] | undefined;
   isFetching: boolean;
@@ -31,18 +33,20 @@ export function ThrowPicker({
   return (
     <div className="space-y-4">
       <div className="space-y-1">
-        <p className="text-muted-foreground text-sm">Current state</p>
+        <p className="text-muted-foreground text-sm">{m.builder_current_state()}</p>
         <p className="font-mono text-lg font-semibold">{currentLabel}</p>
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium">Choose a throw</p>
+          <p className="text-sm font-medium">{m.builder_choose_throw()}</p>
           {isFetching && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         </div>
 
         {error && (
-          <p className="text-destructive text-xs">{error.message || "Failed to load throws"}</p>
+          <p className="text-destructive text-xs">
+            {error.message || m.builder_failed_to_load_throws()}
+          </p>
         )}
 
         {throws && (
@@ -77,7 +81,7 @@ export function ThrowPicker({
                           : "text-amber-600 dark:text-amber-400",
                       )}
                     >
-                      ↻ loop
+                      {m.builder_loop()}
                     </span>
                   )}
                 </Button>

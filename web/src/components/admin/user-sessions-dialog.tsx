@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/table";
 import { adminQueries, useRevokeAllSessions, useRevokeSession } from "@/queries/admin";
 
+import { m } from "@/paraglide/messages.js";
+
 interface UserSessionsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -43,8 +45,8 @@ export function UserSessionsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Sessions for {userName}</DialogTitle>
-          <DialogDescription>View and manage active sessions.</DialogDescription>
+          <DialogTitle>{m.admin_sessions_title({ userName })}</DialogTitle>
+          <DialogDescription>{m.admin_sessions_description()}</DialogDescription>
         </DialogHeader>
         {isLoading ? (
           <div className="space-y-2">
@@ -57,10 +59,10 @@ export function UserSessionsDialog({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User Agent</TableHead>
-                    <TableHead>IP</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Expires</TableHead>
+                    <TableHead>{m.admin_sessions_user_agent()}</TableHead>
+                    <TableHead>{m.admin_sessions_ip()}</TableHead>
+                    <TableHead>{m.admin_sessions_created()}</TableHead>
+                    <TableHead>{m.admin_sessions_expires()}</TableHead>
                     <TableHead className="w-20" />
                   </TableRow>
                 </TableHeader>
@@ -86,7 +88,7 @@ export function UserSessionsDialog({
                           }
                           disabled={revokeSession.isPending}
                         >
-                          Revoke
+                          {m.admin_sessions_revoke()}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -101,12 +103,14 @@ export function UserSessionsDialog({
                 onClick={() => revokeAll.mutate(userId)}
                 disabled={revokeAll.isPending}
               >
-                {revokeAll.isPending ? "Revoking..." : "Revoke All Sessions"}
+                {revokeAll.isPending ? m.admin_sessions_revoking() : m.admin_sessions_revoke_all()}
               </Button>
             </div>
           </>
         ) : (
-          <p className="text-muted-foreground py-4 text-center text-sm">No active sessions.</p>
+          <p className="text-muted-foreground py-4 text-center text-sm">
+            {m.admin_sessions_none()}
+          </p>
         )}
       </DialogContent>
     </Dialog>

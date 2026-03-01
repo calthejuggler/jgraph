@@ -2,5 +2,7 @@ node_modules
 dist
 engine
 web/src/routeTree.gen.ts
+web/src/paraglide
+web/project.inlang
 server/drizzle
 bun.lock

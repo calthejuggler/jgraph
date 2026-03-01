@@ -6,6 +6,8 @@ import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { toAbbreviatedLabel, toBinaryLabel } from "@/lib/binary-label";
 import type { TableApiResponse } from "@/lib/table-types";
 
+import { m } from "@/paraglide/messages.js";
+
 interface ScatterPoint {
   x: number;
   y: number;
@@ -22,7 +24,7 @@ interface ScatterChartViewProps {
 
 const chartConfig = {
   throw: {
-    label: "Throw height",
+    label: m.scatter_throw_height(),
     color: "var(--color-chart-1)",
   },
 } satisfies ChartConfig;
@@ -42,15 +44,15 @@ function CustomTooltip({
     <div className="border-border/50 bg-background rounded-lg border px-2.5 py-1.5 text-xs shadow-xl">
       <div className="grid gap-1">
         <div className="flex justify-between gap-4">
-          <span className="text-muted-foreground">From</span>
+          <span className="text-muted-foreground">{m.scatter_from()}</span>
           <span className="font-mono font-medium">{point.fromLabel}</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-muted-foreground">To</span>
+          <span className="text-muted-foreground">{m.scatter_to()}</span>
           <span className="font-mono font-medium">{point.toLabel}</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-muted-foreground">Throw</span>
+          <span className="text-muted-foreground">{m.scatter_throw()}</span>
           <span className="font-mono font-medium">{point.size}</span>
         </div>
       </div>
@@ -102,20 +104,20 @@ export function ScatterChartView({ data, reversed, abbreviated }: ScatterChartVi
         <XAxis
           type="number"
           dataKey="x"
-          name="From"
+          name={m.scatter_from()}
           domain={[-0.5, labels.length - 0.5]}
           ticks={ticks}
           tickFormatter={(i: number) => labels[i] ?? ""}
-          label={{ value: "Source state", position: "bottom", offset: 0 }}
+          label={{ value: m.scatter_source_state(), position: "bottom", offset: 0 }}
         />
         <YAxis
           type="number"
           dataKey="y"
-          name="To"
+          name={m.scatter_to()}
           domain={[-0.5, labels.length - 0.5]}
           ticks={ticks}
           tickFormatter={(i: number) => labels[i] ?? ""}
-          label={{ value: "Destination state", angle: -90, position: "left", offset: 0 }}
+          label={{ value: m.scatter_destination_state(), angle: -90, position: "left", offset: 0 }}
         />
         <ZAxis type="number" dataKey="size" range={[20, isLarge ? 100 : 200]} />
         {!isLarge && <Tooltip content={<CustomTooltip />} />}

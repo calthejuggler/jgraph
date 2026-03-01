@@ -11,6 +11,8 @@ import { UI_MAX_HEIGHT, type GraphsValues } from "@/lib/schemas";
 import type { ViewType } from "@/lib/view-types";
 import { useConfigQuery } from "@/queries/config";
 
+import { m } from "@/paraglide/messages.js";
+
 interface QueryFormProps {
   form: UseFormReturn<GraphsValues>;
   onSubmit: (values: GraphsValues) => void;
@@ -44,7 +46,7 @@ export function QueryForm({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold">Query</span>
+        <span className="text-sm font-semibold">{m.query_label()}</span>
         {isFetching && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
       </div>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
@@ -54,7 +56,7 @@ export function QueryForm({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="num_props">Props</FieldLabel>
+                <FieldLabel htmlFor="num_props">{m.query_props()}</FieldLabel>
                 <Input
                   id="num_props"
                   type="number"
@@ -78,7 +80,7 @@ export function QueryForm({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="max_height">Max height</FieldLabel>
+                <FieldLabel htmlFor="max_height">{m.query_max_height()}</FieldLabel>
                 <Input
                   id="max_height"
                   type="number"
@@ -107,7 +109,7 @@ export function QueryForm({
               onCheckedChange={onAbbreviatedChange}
             />
             <Label htmlFor="abbreviated" className="text-xs font-normal">
-              Abbreviated notation
+              {m.query_abbreviated()}
             </Label>
           </div>
           <div className="flex items-center gap-2">
@@ -122,12 +124,12 @@ export function QueryForm({
               htmlFor="reversed"
               className={`text-xs font-normal ${abbreviated ? "text-muted-foreground" : ""}`}
             >
-              Reverse notation
+              {m.query_reverse()}
             </Label>
           </div>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs font-normal">View</Label>
+          <Label className="text-xs font-normal">{m.query_view()}</Label>
           <ToggleGroup
             type="single"
             value={view}
@@ -136,19 +138,19 @@ export function QueryForm({
             }}
           >
             <ToggleGroupItem value="graph" className="flex-1 text-xs">
-              Graph
+              {m.query_view_graph()}
             </ToggleGroupItem>
             <ToggleGroupItem value="table" className="flex-1 text-xs">
-              Table
+              {m.query_view_table()}
             </ToggleGroupItem>
             <ToggleGroupItem value="scatter" className="flex-1 text-xs">
-              Scatter
+              {m.query_view_scatter()}
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
         {error && (
           <p className="text-destructive text-xs">
-            {error instanceof Error ? error.message : "Request failed"}
+            {error instanceof Error ? error.message : m.query_request_failed()}
           </p>
         )}
       </form>

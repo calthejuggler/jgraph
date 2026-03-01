@@ -10,6 +10,8 @@ import type { ViewType } from "@/lib/view-types";
 import { QueryForm } from "../query-form";
 import { ScatterChartView } from "./scatter-chart-view";
 
+import { m } from "@/paraglide/messages.js";
+
 interface ScatterChartCanvasProps {
   data: TableApiResponse | undefined;
   reversed: boolean;
@@ -71,7 +73,7 @@ export function ScatterChartCanvas({
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center gap-2">
               <AlertCircle className="text-destructive h-8 w-8" />
-              <p className="text-destructive text-lg">Failed to load scatter chart</p>
+              <p className="text-destructive text-lg">{m.scatter_failed_to_load()}</p>
               <p className="text-muted-foreground text-sm">{error.message}</p>
             </div>
           </div>
@@ -79,7 +81,7 @@ export function ScatterChartCanvas({
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-              <p className="text-muted-foreground text-lg">Loading scatter chart...</p>
+              <p className="text-muted-foreground text-lg">{m.scatter_loading()}</p>
             </div>
           </div>
         ) : null}

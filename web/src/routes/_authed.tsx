@@ -9,6 +9,7 @@ import {
 import { MenuIcon } from "lucide-react";
 
 import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
+import { LocaleToggle } from "@/components/locale-toggle";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,6 +23,9 @@ import { useTheme } from "@/hooks/use-theme";
 import { API_URL } from "@/lib/api";
 import { signOut } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+
+import { m } from "@/paraglide/messages.js";
+import { getLocale, locales, setLocale } from "@/paraglide/runtime.js";
 
 const GRAPH_SEARCH = { num_props: 3, max_height: 5, view: "graph" } as const;
 const BUILDER_SEARCH = { num_props: 3, max_height: 5 } as const;
@@ -55,7 +59,7 @@ function AuthedLayout() {
       <header className="border-border bg-card border-b">
         {/* Mobile header */}
         <div className="flex items-center justify-between px-4 py-3 md:hidden">
-          <h1 className="text-lg font-semibold">Juggling Tools</h1>
+          <h1 className="text-lg font-semibold">{m.app_name()}</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
@@ -69,29 +73,38 @@ function AuthedLayout() {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/" search={GRAPH_SEARCH}>
-                  State Graphs
+                  {m.nav_state_graphs()}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link to="/builder" search={BUILDER_SEARCH}>
-                  Siteswap Builder
+                  {m.nav_siteswap_builder()}
                 </Link>
               </DropdownMenuItem>
               {isAdmin && (
                 <DropdownMenuItem asChild>
                   <Link to="/admin" search={ADMIN_SEARCH}>
-                    Admin Panel
+                    {m.nav_admin_panel()}
                   </Link>
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={toggleTheme}>
-                {theme === "dark" ? "Light" : "Dark"}
+                {theme === "dark" ? m.nav_theme_light() : m.nav_theme_dark()}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const current = getLocale();
+                  const next = locales.find((l) => l !== current) ?? locales[0];
+                  setLocale(next);
+                }}
+              >
+                {getLocale().toUpperCase()}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => signOut().then(() => window.location.assign("/login"))}
               >
-                Sign out
+                {m.nav_sign_out()}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -99,7 +112,7 @@ function AuthedLayout() {
         {/* Desktop header */}
         <div className="hidden grid-cols-3 items-center px-4 py-3 md:grid">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-semibold">Juggling Tools</h1>
+            <h1 className="text-lg font-semibold">{m.app_name()}</h1>
           </div>
           <nav className="flex items-center justify-center gap-1">
             <Button
@@ -109,7 +122,7 @@ function AuthedLayout() {
               className={cn(currentPath === "/" && "bg-accent")}
             >
               <Link to="/" search={GRAPH_SEARCH}>
-                State Graphs
+                {m.nav_state_graphs()}
               </Link>
             </Button>
             <Button
@@ -119,7 +132,7 @@ function AuthedLayout() {
               className={cn(currentPath === "/builder" && "bg-accent")}
             >
               <Link to="/builder" search={BUILDER_SEARCH}>
-                Siteswap Builder
+                {m.nav_siteswap_builder()}
               </Link>
             </Button>
             {isAdmin && (
@@ -130,14 +143,15 @@ function AuthedLayout() {
                 className={cn(currentPath.startsWith("/admin") && "bg-accent")}
               >
                 <Link to="/admin" search={ADMIN_SEARCH}>
-                  Admin Panel
+                  {m.nav_admin_panel()}
                 </Link>
               </Button>
             )}
           </nav>
           <div className="flex items-center justify-end gap-3">
+            <LocaleToggle />
             <Button variant="ghost" size="sm" onClick={toggleTheme}>
-              {theme === "dark" ? "Light" : "Dark"}
+              {theme === "dark" ? m.nav_theme_light() : m.nav_theme_dark()}
             </Button>
             {session?.user && (
               <span className="text-muted-foreground text-sm">
@@ -149,7 +163,7 @@ function AuthedLayout() {
               size="sm"
               onClick={() => signOut().then(() => window.location.assign("/login"))}
             >
-              Sign out
+              {m.nav_sign_out()}
             </Button>
           </div>
         </div>

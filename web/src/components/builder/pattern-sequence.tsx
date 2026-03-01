@@ -2,6 +2,8 @@ import type { BuilderStep } from "@/hooks/use-builder-reducer";
 import { toBinaryLabel } from "@/lib/binary-label";
 import { cn } from "@/lib/utils";
 
+import { m } from "@/paraglide/messages.js";
+
 interface PatternSequenceProps {
   steps: BuilderStep[];
   groundState: number;
@@ -16,7 +18,7 @@ export function PatternSequence({
   visitedStatesBefore,
 }: PatternSequenceProps) {
   if (steps.length === 0) {
-    return <p className="text-muted-foreground text-sm">Choose throws to build a pattern.</p>;
+    return <p className="text-muted-foreground text-sm">{m.builder_choose_prompt()}</p>;
   }
 
   const siteswap = steps.map((s) => s.throwHeight).join(" ");
@@ -46,7 +48,7 @@ export function PatternSequence({
                       : "text-amber-600 dark:text-amber-400",
                   )}
                 >
-                  ← loop
+                  {m.builder_loop_back()}
                 </span>
               )}
             </div>
@@ -55,7 +57,7 @@ export function PatternSequence({
       </div>
 
       <div className="space-y-1">
-        <p className="text-muted-foreground text-xs">Siteswap</p>
+        <p className="text-muted-foreground text-xs">{m.builder_siteswap()}</p>
         <p className="font-mono text-sm font-semibold">{siteswap}</p>
       </div>
     </div>

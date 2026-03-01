@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useImpersonateUser, useRemoveUser, useUnbanUser } from "@/queries/admin";
 
+import { m } from "@/paraglide/messages.js";
+
 interface UserActionsDropdownProps {
   userId: string;
   userName: string;
@@ -41,29 +43,35 @@ export function UserActionsDropdown({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm">
-            Actions
+            {m.admin_actions()}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setActiveDialog("role")}>Set Role</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setActiveDialog("role")}>
+            {m.admin_set_role()}
+          </DropdownMenuItem>
           {isBanned ? (
-            <DropdownMenuItem onClick={() => unban.mutate(userId)}>Unban</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => unban.mutate(userId)}>
+              {m.admin_unban()}
+            </DropdownMenuItem>
           ) : (
             !isSelf && (
-              <DropdownMenuItem onClick={() => setActiveDialog("ban")}>Ban</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveDialog("ban")}>
+                {m.admin_ban()}
+              </DropdownMenuItem>
             )
           )}
           {!isSelf && !isBanned && (
             <DropdownMenuItem onClick={() => impersonate.mutate(userId)}>
-              Impersonate
+              {m.admin_impersonate()}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onClick={() => setActiveDialog("sessions")}>
-            View Sessions
+            {m.admin_view_sessions()}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-destructive" onClick={() => setActiveDialog("remove")}>
-            Remove User
+            {m.admin_remove_user()}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -90,8 +98,8 @@ export function UserActionsDropdown({
       <ConfirmDialog
         open={activeDialog === "remove"}
         onOpenChange={(v) => !v && setActiveDialog(null)}
-        title="Remove User"
-        description={`Are you sure you want to permanently remove ${userName}? This action cannot be undone.`}
+        title={m.admin_remove_user()}
+        description={m.admin_remove_confirm({ userName })}
         onConfirm={() => removeUser.mutate(userId, { onSuccess: () => setActiveDialog(null) })}
         isPending={removeUser.isPending}
       />

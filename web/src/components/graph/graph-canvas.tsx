@@ -25,6 +25,8 @@ import { graphEdgeTypes } from "./graph-edge";
 import { graphNodeTypes } from "./graph-node";
 import { GraphQueryPanel } from "./graph-query-panel";
 
+import { m } from "@/paraglide/messages.js";
+
 const FIT_VIEW_OPTIONS = { padding: 0.2 } as const;
 const DEFAULT_EDGE_OPTIONS = { markerEnd: { type: MarkerType.ArrowClosed } } as const;
 const EMPTY_NODES: GraphNode[] = [];
@@ -93,10 +95,11 @@ export function GraphCanvas({
             {data && (
               <div className="text-muted-foreground mt-2 flex gap-4 text-sm">
                 <span>
-                  <span className="text-muted-foreground">States:</span> {data.num_nodes}
+                  <span className="text-muted-foreground">{m.graph_states()}</span> {data.num_nodes}
                 </span>
                 <span>
-                  <span className="text-muted-foreground">Transitions:</span> {data.num_edges}
+                  <span className="text-muted-foreground">{m.graph_transitions()}</span>{" "}
+                  {data.num_edges}
                 </span>
               </div>
             )}
@@ -132,7 +135,7 @@ export function GraphCanvas({
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="flex flex-col items-center gap-2">
                 <AlertCircle className="text-destructive h-8 w-8" />
-                <p className="text-destructive text-lg">Failed to load graph</p>
+                <p className="text-destructive text-lg">{m.graph_failed_to_load()}</p>
                 <p className="text-muted-foreground text-sm">{error.message}</p>
               </div>
             </div>
@@ -142,7 +145,7 @@ export function GraphCanvas({
               <div className="flex flex-col items-center gap-3">
                 <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
                 {isFetching ? (
-                  <p className="text-muted-foreground text-lg">Fetching graph data...</p>
+                  <p className="text-muted-foreground text-lg">{m.graph_fetching()}</p>
                 ) : progress ? (
                   <div className="flex w-48 flex-col items-center gap-2">
                     <p className="text-muted-foreground text-sm">{PHASE_LABELS[progress.phase]}</p>
@@ -152,7 +155,7 @@ export function GraphCanvas({
                     />
                   </div>
                 ) : (
-                  <p className="text-muted-foreground text-lg">Computing layout...</p>
+                  <p className="text-muted-foreground text-lg">{m.graph_computing_layout()}</p>
                 )}
               </div>
             </div>
@@ -161,7 +164,7 @@ export function GraphCanvas({
             <div className="absolute top-2 left-1/2 z-50 -translate-x-1/2">
               <div className="bg-muted text-muted-foreground flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs shadow-sm">
                 <Info className="h-3.5 w-3.5" />
-                Edge labels hidden for performance
+                {m.graph_edge_labels_hidden()}
               </div>
             </div>
           )}

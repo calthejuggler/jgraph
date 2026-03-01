@@ -16,6 +16,8 @@ import { BuilderGraphPanel } from "./builder-graph-panel";
 import { PatternSequence } from "./pattern-sequence";
 import { ThrowPicker } from "./throw-picker";
 
+import { m } from "@/paraglide/messages.js";
+
 interface BuilderCanvasProps {
   form: UseFormReturn<BuilderValues>;
   onFieldChange: () => void;
@@ -64,7 +66,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
         <Card className="w-full md:w-80 md:shadow-lg">
           <CardContent className="space-y-4 pt-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">Setup</span>
+              <span className="text-sm font-semibold">{m.builder_setup()}</span>
             </div>
 
             <form onSubmit={(e) => e.preventDefault()} className="grid grid-cols-2 gap-3">
@@ -73,7 +75,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="num_props">Props</FieldLabel>
+                    <FieldLabel htmlFor="num_props">{m.query_props()}</FieldLabel>
                     <Input
                       id="num_props"
                       type="number"
@@ -97,7 +99,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="max_height">Max height</FieldLabel>
+                    <FieldLabel htmlFor="max_height">{m.query_max_height()}</FieldLabel>
                     <Input
                       id="max_height"
                       type="number"
@@ -119,7 +121,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
             </form>
 
             <div className="border-border border-t pt-4">
-              <p className="mb-2 text-sm font-semibold">Sequence</p>
+              <p className="mb-2 text-sm font-semibold">{m.builder_sequence()}</p>
               <PatternSequence
                 steps={state.steps}
                 groundState={state.groundState}
@@ -136,7 +138,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
                 disabled={state.steps.length === 0}
               >
                 <Undo2 className="h-3.5 w-3.5" />
-                Undo
+                {m.builder_undo()}
               </Button>
               <Button
                 variant="outline"
@@ -145,7 +147,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
                 disabled={state.steps.length === 0}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                Reset
+                {m.builder_reset()}
               </Button>
             </div>
           </CardContent>
@@ -179,7 +181,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
             <CardContent className="flex items-center justify-center py-8">
               <div className="flex flex-col items-center gap-2">
                 <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-                <p className="text-muted-foreground text-lg">Loading throws...</p>
+                <p className="text-muted-foreground text-lg">{m.builder_loading_throws()}</p>
               </div>
             </CardContent>
           </Card>

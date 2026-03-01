@@ -3,6 +3,8 @@ import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query
 import type { BanUserValues } from "@/lib/admin-schemas";
 import { authClient } from "@/lib/auth-client";
 
+import { m } from "@/paraglide/messages.js";
+
 const PAGE_SIZE = 20;
 
 export const adminQueries = {
@@ -31,7 +33,7 @@ export const adminQueries = {
         }
 
         const res = await authClient.admin.listUsers({ query });
-        if (res.error) throw new Error(res.error.message ?? "Failed to list users");
+        if (res.error) throw new Error(res.error.message ?? m.admin_failed_list_users());
         return res.data;
       },
     }),
@@ -41,7 +43,7 @@ export const adminQueries = {
       queryKey: adminQueries.sessions(userId),
       queryFn: async () => {
         const res = await authClient.admin.listUserSessions({ userId });
-        if (res.error) throw new Error(res.error.message ?? "Failed to list sessions");
+        if (res.error) throw new Error(res.error.message ?? m.admin_failed_list_sessions());
         return res.data;
       },
     }),
@@ -59,7 +61,7 @@ export function useBanUser() {
   return useMutation({
     mutationFn: async ({ userId, ...values }: BanUserValues & { userId: string }) => {
       const res = await authClient.admin.banUser({ userId, ...values });
-      if (res.error) throw new Error(res.error.message ?? "Failed to ban user");
+      if (res.error) throw new Error(res.error.message ?? m.admin_failed_ban_user());
       return res.data;
     },
     onSuccess: invalidate,
@@ -71,7 +73,7 @@ export function useUnbanUser() {
   return useMutation({
     mutationFn: async (userId: string) => {
       const res = await authClient.admin.unbanUser({ userId });
-      if (res.error) throw new Error(res.error.message ?? "Failed to unban user");
+      if (res.error) throw new Error(res.error.message ?? m.admin_failed_unban_user());
       return res.data;
     },
     onSuccess: invalidate,
@@ -83,7 +85,7 @@ export function useSetRole() {
   return useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: "admin" | "user" }) => {
       const res = await authClient.admin.setRole({ userId, role });
-      if (res.error) throw new Error(res.error.message ?? "Failed to set role");
+      if (res.error) throw new Error(res.error.message ?? m.admin_failed_set_role());
       return res.data;
     },
     onSuccess: invalidate,
@@ -94,7 +96,7 @@ export function useImpersonateUser() {
   return useMutation({
     mutationFn: async (userId: string) => {
       const res = await authClient.admin.impersonateUser({ userId });
-      if (res.error) throw new Error(res.error.message ?? "Failed to impersonate user");
+      if (res.error) throw new Error(res.error.message ?? m.admin_failed_impersonate());
       return res.data;
     },
     onSuccess: () => {
@@ -107,7 +109,7 @@ export function useStopImpersonating() {
   return useMutation({
     mutationFn: async () => {
       const res = await authClient.admin.stopImpersonating();
-      if (res.error) throw new Error(res.error.message ?? "Failed to stop impersonating");
+      if (res.error) throw new Error(res.error.message ?? m.admin_failed_stop_impersonating());
       return res.data;
     },
     onSuccess: () => {
@@ -121,7 +123,7 @@ export function useRevokeSession() {
   return useMutation({
     mutationFn: async ({ sessionToken, userId }: { sessionToken: string; userId: string }) => {
       const res = await authClient.admin.revokeUserSession({ sessionToken });
-      if (res.error) throw new Error(res.error.message ?? "Failed to revoke session");
+      if (res.error) throw new Error(res.error.message ?? m.admin_failed_revoke_session());
       return { ...res.data, userId };
     },
     onSuccess: (_data, { userId }) => {
@@ -135,7 +137,7 @@ export function useRevokeAllSessions() {
   return useMutation({
     mutationFn: async (userId: string) => {
       const res = await authClient.admin.revokeUserSessions({ userId });
-      if (res.error) throw new Error(res.error.message ?? "Failed to revoke sessions");
+      if (res.error) throw new Error(res.error.message ?? m.admin_failed_revoke_sessions());
       return res.data;
     },
     onSuccess: (_data, userId) => {
@@ -149,7 +151,7 @@ export function useRemoveUser() {
   return useMutation({
     mutationFn: async (userId: string) => {
       const res = await authClient.admin.removeUser({ userId });
-      if (res.error) throw new Error(res.error.message ?? "Failed to remove user");
+      if (res.error) throw new Error(res.error.message ?? m.admin_failed_remove_user());
       return res.data;
     },
     onSuccess: invalidate,

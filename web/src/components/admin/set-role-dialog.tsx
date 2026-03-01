@@ -23,6 +23,8 @@ import {
 import { setRoleSchema, type SetRoleValues } from "@/lib/admin-schemas";
 import { useSetRole } from "@/queries/admin";
 
+import { m } from "@/paraglide/messages.js";
+
 interface SetRoleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -72,8 +74,8 @@ export function SetRoleDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Set Role</DialogTitle>
-          <DialogDescription>Change the role for {userName}.</DialogDescription>
+          <DialogTitle>{m.admin_role_title()}</DialogTitle>
+          <DialogDescription>{m.admin_role_description({ userName })}</DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
           <Controller
@@ -81,14 +83,14 @@ export function SetRoleDialog({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="role-select">Role</FieldLabel>
+                <FieldLabel htmlFor="role-select">{m.admin_role_label()}</FieldLabel>
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="role-select" aria-invalid={fieldState.invalid}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="user">{m.admin_role_user()}</SelectItem>
+                    <SelectItem value="admin">{m.admin_role_admin()}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FieldError errors={[fieldState.error]} />
@@ -102,10 +104,10 @@ export function SetRoleDialog({
               onClick={() => onOpenChange(false)}
               disabled={setRoleMutation.isPending}
             >
-              Cancel
+              {m.common_cancel()}
             </Button>
             <Button type="submit" disabled={setRoleMutation.isPending}>
-              {setRoleMutation.isPending ? "Saving..." : "Save"}
+              {setRoleMutation.isPending ? m.admin_saving() : m.admin_save()}
             </Button>
           </DialogFooter>
         </form>

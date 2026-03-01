@@ -24,12 +24,14 @@ import { Textarea } from "@/components/ui/textarea";
 import type { BanUserValues } from "@/lib/admin-schemas";
 import { useBanUser } from "@/queries/admin";
 
+import { m } from "@/paraglide/messages.js";
+
 const DURATION_OPTIONS = [
-  { label: "1 hour", value: "3600" },
-  { label: "1 day", value: "86400" },
-  { label: "1 week", value: "604800" },
-  { label: "1 month", value: "2592000" },
-  { label: "Permanent", value: "permanent" },
+  { label: m.admin_ban_duration_1h(), value: "3600" },
+  { label: m.admin_ban_duration_1d(), value: "86400" },
+  { label: m.admin_ban_duration_1w(), value: "604800" },
+  { label: m.admin_ban_duration_1m(), value: "2592000" },
+  { label: m.admin_ban_duration_permanent(), value: "permanent" },
 ] as const;
 
 const durationSchema = z.enum(["3600", "86400", "604800", "2592000", "permanent"]);
@@ -84,10 +86,8 @@ export function BanUserDialog({ open, onOpenChange, userId, userName }: BanUserD
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Ban User</DialogTitle>
-          <DialogDescription>
-            Ban {userName} from the application. They will be unable to sign in.
-          </DialogDescription>
+          <DialogTitle>{m.admin_ban_title()}</DialogTitle>
+          <DialogDescription>{m.admin_ban_description({ userName })}</DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
           <Controller
@@ -95,11 +95,11 @@ export function BanUserDialog({ open, onOpenChange, userId, userName }: BanUserD
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="ban-reason">Reason (optional)</FieldLabel>
+                <FieldLabel htmlFor="ban-reason">{m.admin_ban_reason_label()}</FieldLabel>
                 <Textarea
                   {...field}
                   id="ban-reason"
-                  placeholder="Enter ban reason..."
+                  placeholder={m.admin_ban_reason_placeholder()}
                   aria-invalid={fieldState.invalid}
                 />
                 <FieldError errors={[fieldState.error]} />
@@ -111,7 +111,7 @@ export function BanUserDialog({ open, onOpenChange, userId, userName }: BanUserD
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="ban-duration">Duration</FieldLabel>
+                <FieldLabel htmlFor="ban-duration">{m.admin_ban_duration_label()}</FieldLabel>
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="ban-duration" aria-invalid={fieldState.invalid}>
                     <SelectValue />
@@ -135,10 +135,10 @@ export function BanUserDialog({ open, onOpenChange, userId, userName }: BanUserD
               onClick={() => onOpenChange(false)}
               disabled={banUser.isPending}
             >
-              Cancel
+              {m.common_cancel()}
             </Button>
             <Button type="submit" variant="destructive" disabled={banUser.isPending}>
-              {banUser.isPending ? "Banning..." : "Ban User"}
+              {banUser.isPending ? m.admin_banning() : m.admin_ban_title()}
             </Button>
           </DialogFooter>
         </form>

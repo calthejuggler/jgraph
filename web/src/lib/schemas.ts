@@ -1,16 +1,18 @@
 import { z } from "zod";
 
+import { m } from "@/paraglide/messages.js";
+
 export const loginSchema = z.object({
-  email: z.email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+  email: z.email(m.validation_invalid_email()),
+  password: z.string().min(1, m.validation_password_required()),
 });
 
 export type LoginValues = z.infer<typeof loginSchema>;
 
 export const signupSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  name: z.string().min(1, m.validation_name_required()),
+  email: z.email(m.validation_invalid_email()),
+  password: z.string().min(8, m.validation_password_min()),
 });
 
 export type SignupValues = z.infer<typeof signupSchema>;
@@ -23,7 +25,7 @@ export const graphsSchema = z
     max_height: z.number().int().min(1).max(UI_MAX_HEIGHT),
   })
   .refine((data) => data.max_height >= data.num_props, {
-    message: "Max height must be >= number of props",
+    message: m.validation_max_height(),
     path: ["max_height"],
   });
 
@@ -35,7 +37,7 @@ export const builderSchema = z
     max_height: z.number().int().min(1).max(UI_MAX_HEIGHT),
   })
   .refine((data) => data.max_height >= data.num_props, {
-    message: "Max height must be >= number of props",
+    message: m.validation_max_height(),
     path: ["max_height"],
   });
 

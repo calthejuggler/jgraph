@@ -2,6 +2,8 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { API_URL } from "@/lib/api";
 
+import { m } from "@/paraglide/messages.js";
+
 export const configQueries = {
   all: () => ["config"] as const,
   gets: () => [...configQueries.all(), "get"] as const,
@@ -14,7 +16,7 @@ export const configQueries = {
           credentials: "include",
           signal,
         });
-        if (!res.ok) throw new Error("Failed to fetch config");
+        if (!res.ok) throw new Error(m.query_fetch_config_failed());
         return res.json() as Promise<{ max_max_height: number }>;
       },
     }),

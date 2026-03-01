@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { useStopImpersonating } from "@/queries/admin";
 
+import { m } from "@/paraglide/messages.js";
+
 interface ImpersonationBannerProps {
   name: string;
   email: string;
@@ -11,9 +13,7 @@ export function ImpersonationBanner({ name, email }: ImpersonationBannerProps) {
 
   return (
     <div className="flex items-center justify-center gap-3 bg-amber-500 px-4 py-1.5 text-sm font-medium text-black">
-      <span>
-        Viewing as {name} ({email})
-      </span>
+      <span>{m.admin_impersonation_viewing({ name, email })}</span>
       <Button
         variant="outline"
         size="sm"
@@ -21,7 +21,9 @@ export function ImpersonationBanner({ name, email }: ImpersonationBannerProps) {
         onClick={() => stopImpersonating.mutate()}
         disabled={stopImpersonating.isPending}
       >
-        {stopImpersonating.isPending ? "Stopping..." : "Stop Impersonating"}
+        {stopImpersonating.isPending
+          ? m.admin_impersonation_stopping()
+          : m.admin_impersonation_stop()}
       </Button>
     </div>
   );

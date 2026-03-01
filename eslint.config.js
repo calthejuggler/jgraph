@@ -11,6 +11,7 @@ export default defineConfig([
     "node_modules/",
     "**/dist/",
     "web/src/routeTree.gen.ts",
+    "web/src/paraglide/",
     "server/drizzle/",
   ]),
 

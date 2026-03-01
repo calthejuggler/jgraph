@@ -21,6 +21,8 @@ import { useSession } from "@/lib/auth-client";
 import { ADMIN_PAGE_SIZE, adminQueries } from "@/queries/admin";
 import { Route } from "@/routes/_authed/admin/index";
 
+import { m } from "@/paraglide/messages.js";
+
 export function AdminUsersPage() {
   const { data: session } = useSession();
   const { search, page, sortBy, sortDirection } = Route.useSearch();
@@ -67,12 +69,12 @@ export function AdminUsersPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-4 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Users</h2>
-        <span className="text-muted-foreground text-sm">{total} total</span>
+        <h2 className="text-xl font-semibold">{m.admin_users_title()}</h2>
+        <span className="text-muted-foreground text-sm">{m.admin_total({ count: total })}</span>
       </div>
 
       <Input
-        placeholder="Search by email..."
+        placeholder={m.admin_search_placeholder()}
         value={searchInput}
         onChange={handleSearchChange}
         className="max-w-sm"
@@ -98,7 +100,7 @@ export function AdminUsersPage() {
                     direction={sortDirection}
                     onClick={handleSort}
                   >
-                    Name
+                    {m.admin_col_name()}
                   </SortableHead>
                   <SortableHead
                     field="email"
@@ -106,17 +108,17 @@ export function AdminUsersPage() {
                     direction={sortDirection}
                     onClick={handleSort}
                   >
-                    Email
+                    {m.admin_col_email()}
                   </SortableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{m.admin_col_role()}</TableHead>
+                  <TableHead>{m.admin_col_status()}</TableHead>
                   <SortableHead
                     field="createdAt"
                     current={sortBy}
                     direction={sortDirection}
                     onClick={handleSort}
                   >
-                    Created
+                    {m.admin_col_created()}
                   </SortableHead>
                   <TableHead className="w-24" />
                 </TableRow>
@@ -138,14 +140,16 @@ export function AdminUsersPage() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge variant="destructive" className="cursor-default">
-                                  Banned
+                                  {m.admin_status_banned()}
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>
                                   {user.banExpires
-                                    ? `Until ${new Date(user.banExpires).toLocaleString()}`
-                                    : "Permanent"}
+                                    ? m.admin_ban_until({
+                                        date: new Date(user.banExpires).toLocaleString(),
+                                      })
+                                    : m.admin_ban_permanent()}
                                 </p>
                                 {user.banReason && (
                                   <p className="text-muted mt-1 italic">{user.banReason}</p>
@@ -154,7 +158,7 @@ export function AdminUsersPage() {
                             </Tooltip>
                           </TooltipProvider>
                         ) : (
-                          <Badge variant="outline">Active</Badge>
+                          <Badge variant="outline">{m.admin_status_active()}</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
@@ -174,7 +178,7 @@ export function AdminUsersPage() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={6} className="text-muted-foreground text-center">
-                      No users found.
+                      {m.admin_no_users()}
                     </TableCell>
                   </TableRow>
                 )}
@@ -184,7 +188,7 @@ export function AdminUsersPage() {
 
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-sm">
-              Page {page} of {totalPages}
+              {m.admin_page_info({ page, totalPages })}
             </span>
             <div className="flex gap-2">
               <Button
@@ -195,7 +199,7 @@ export function AdminUsersPage() {
                   navigate({ search: (prev) => ({ ...prev, page: prev.page - 1 }), replace: true })
                 }
               >
-                Previous
+                {m.admin_previous()}
               </Button>
               <Button
                 variant="outline"
@@ -205,7 +209,7 @@ export function AdminUsersPage() {
                   navigate({ search: (prev) => ({ ...prev, page: prev.page + 1 }), replace: true })
                 }
               >
-                Next
+                {m.admin_next()}
               </Button>
             </div>
           </div>
