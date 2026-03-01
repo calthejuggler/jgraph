@@ -8,14 +8,15 @@ import {
   MiniMap,
   ReactFlow,
 } from "@xyflow/react";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Info, Loader2 } from "lucide-react";
 
-import { useGraphLayout } from "@/hooks/use-graph-layout";
+import { PHASE_LABELS, useGraphLayout } from "@/hooks/use-graph-layout";
 import { useTheme } from "@/hooks/use-theme";
 import type { GraphApiResponse, GraphEdge, GraphNode } from "@/lib/graph-types";
 import type { GraphsValues } from "@/lib/schemas";
 import type { ViewType } from "@/lib/view-types";
 
+import { Progress } from "../ui/progress";
 import { GraphDetailsPanel } from "./graph-details-panel";
 import { graphEdgeTypes } from "./graph-edge";
 import { graphNodeTypes } from "./graph-node";
@@ -56,7 +57,7 @@ export function GraphCanvas({
   onViewChange,
 }: GraphCanvasProps) {
   const { theme } = useTheme();
-  const layout = useGraphLayout(data, reversed, abbreviated);
+  const { layout, progress } = useGraphLayout(data, reversed, abbreviated);
 
   const isLayoutPending = !!data && !layout;
   const isLoading = isFetching || isLayoutPending;
@@ -108,9 +109,29 @@ export function GraphCanvas({
       )}
       {!layout && isLoading && !error && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-3">
             <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-            <p className="text-muted-foreground text-lg">Loading graph...</p>
+            {isFetching ? (
+              <p className="text-muted-foreground text-lg">Fetching graph data...</p>
+            ) : progress ? (
+              <div className="flex w-48 flex-col items-center gap-2">
+                <p className="text-muted-foreground text-sm">{PHASE_LABELS[progress.phase]}</p>
+                <Progress
+                  value={((progress.phaseIndex + 1) / progress.totalPhases) * 100}
+                  className="w-full"
+                />
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-lg">Computing layout...</p>
+            )}
+          </div>
+        </div>
+      )}
+      {layout?.simplified && (
+        <div className="absolute top-2 left-1/2 z-50 -translate-x-1/2">
+          <div className="bg-muted text-muted-foreground flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs shadow-sm">
+            <Info className="h-3.5 w-3.5" />
+            Edge labels hidden for performance
           </div>
         </div>
       )}

@@ -1,25 +1,70 @@
 import { useSyncExternalStore } from "react";
 
 import type { GraphApiResponse, GraphEdge, GraphNode } from "@/lib/graph-types";
-import type { LayoutResponse } from "@/workers/graph-layout.worker";
+import type { LayoutPhase, WorkerMessage } from "@/workers/graph-layout.worker";
 import GraphLayoutWorker from "@/workers/graph-layout.worker?worker";
 
-interface GraphLayout {
+export interface GraphLayout {
   nodes: GraphNode[];
   edges: GraphEdge[];
+  simplified: boolean;
 }
+
+export interface LayoutProgress {
+  phase: LayoutPhase;
+  phaseIndex: number;
+  totalPhases: number;
+}
+
+export const PHASE_LABELS: Record<LayoutPhase, string> = {
+  expanding: "Expanding labels...",
+  "building-graph": "Building graph...",
+  "computing-layout": "Computing layout...",
+  positioning: "Positioning nodes...",
+  finalizing: "Finalizing edges...",
+};
 
 const worker = new GraphLayoutWorker();
 const listeners = new Set<() => void>();
-let snapshot: LayoutResponse | null = null;
+
+interface LayoutSnapshot {
+  id: number;
+  layout: GraphLayout;
+}
+
+interface ProgressSnapshot {
+  id: number;
+  progress: LayoutProgress;
+}
+
+let layoutSnapshot: LayoutSnapshot | null = null;
+let progressSnapshot: ProgressSnapshot | null = null;
 
 let lastRequestedData: GraphApiResponse | undefined;
 let lastRequestedReversed: boolean | undefined;
 let lastRequestedAbbreviated: boolean | undefined;
 let requestId = 0;
+let requestStartTime = 0;
 
-worker.addEventListener("message", (event: MessageEvent<LayoutResponse>) => {
-  snapshot = event.data;
+const PROGRESS_DELAY_MS = 200;
+
+worker.addEventListener("message", (event: MessageEvent<WorkerMessage>) => {
+  const msg = event.data;
+  if (msg.type === "progress") {
+    if (Date.now() - requestStartTime > PROGRESS_DELAY_MS) {
+      progressSnapshot = {
+        id: msg.id,
+        progress: {
+          phase: msg.phase,
+          phaseIndex: msg.phaseIndex,
+          totalPhases: msg.totalPhases,
+        },
+      };
+    }
+  } else {
+    layoutSnapshot = { id: msg.id, layout: msg.layout };
+    progressSnapshot = null;
+  }
   listeners.forEach((l) => l());
 });
 
@@ -30,8 +75,12 @@ function subscribe(callback: () => void) {
   };
 }
 
-function getSnapshot() {
-  return snapshot;
+function getLayoutSnapshot() {
+  return layoutSnapshot;
+}
+
+function getProgressSnapshot() {
+  return progressSnapshot;
 }
 
 function requestLayout(data: GraphApiResponse, reversed: boolean, abbreviated: boolean): number {
@@ -45,6 +94,8 @@ function requestLayout(data: GraphApiResponse, reversed: boolean, abbreviated: b
   lastRequestedReversed = reversed;
   lastRequestedAbbreviated = abbreviated;
   requestId++;
+  requestStartTime = Date.now();
+  progressSnapshot = null;
   worker.postMessage({ id: requestId, data, reversed, abbreviated });
   return requestId;
 }
@@ -53,11 +104,13 @@ export function useGraphLayout(
   data: GraphApiResponse | undefined,
   reversed: boolean,
   abbreviated: boolean,
-): GraphLayout | null {
+): { layout: GraphLayout | null; progress: LayoutProgress | null } {
   const currentId = data ? requestLayout(data, reversed, abbreviated) : -1;
-  const result = useSyncExternalStore(subscribe, getSnapshot);
+  const layoutResult = useSyncExternalStore(subscribe, getLayoutSnapshot);
+  const progressResult = useSyncExternalStore(subscribe, getProgressSnapshot);
 
-  if (result?.id !== currentId) return null;
+  const layout = layoutResult?.id === currentId ? layoutResult.layout : null;
+  const progress = progressResult?.id === currentId ? progressResult.progress : null;
 
-  return result.layout;
+  return { layout, progress };
 }

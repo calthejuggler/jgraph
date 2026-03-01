@@ -3,10 +3,11 @@ import dagre from "dagre";
 import { toAbbreviatedLabel, toBinaryLabel } from "./binary-label";
 import type { ExpandedGraphResponse, GraphApiResponse, GraphEdge, GraphNode } from "./graph-types";
 
-const NODE_WIDTH = 120;
-const NODE_HEIGHT = 40;
+export const NODE_WIDTH = 120;
+export const NODE_HEIGHT = 40;
+export const SIMPLIFIED_THRESHOLD = 200;
 
-function expandCompactResponse(
+export function expandCompactResponse(
   data: GraphApiResponse,
   reversed: boolean,
   abbreviated: boolean,
@@ -27,20 +28,10 @@ function expandCompactResponse(
   };
 }
 
-export function computeGraphLayout(
-  data: GraphApiResponse,
-  reversed: boolean,
-  abbreviated: boolean,
-): {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-} {
-  const expanded = expandCompactResponse(data, reversed, abbreviated);
+export function buildDagreGraph(expanded: ExpandedGraphResponse): dagre.graphlib.Graph {
   const g = new dagre.graphlib.Graph();
   g.setGraph({ rankdir: "TB" });
   g.setDefaultEdgeLabel(() => ({}));
-
-  const baseId = expanded.ground_state;
 
   for (const node of expanded.nodes) {
     g.setNode(node, { width: NODE_WIDTH, height: NODE_HEIGHT });
@@ -50,9 +41,19 @@ export function computeGraphLayout(
     g.setEdge(edge.from, edge.to);
   }
 
-  dagre.layout(g);
+  return g;
+}
 
-  const nodes: GraphNode[] = expanded.nodes.map((id) => {
+export function runDagreLayout(g: dagre.graphlib.Graph): void {
+  dagre.layout(g);
+}
+
+export function extractNodes(
+  g: dagre.graphlib.Graph,
+  expanded: ExpandedGraphResponse,
+  baseId: string,
+): GraphNode[] {
+  return expanded.nodes.map((id) => {
     const pos = g.node(id);
     return {
       id,
@@ -61,14 +62,29 @@ export function computeGraphLayout(
       data: { label: id, isBase: id === baseId },
     };
   });
+}
 
-  const edges: GraphEdge[] = expanded.edges.map((edge) => ({
+export function extractEdges(expanded: ExpandedGraphResponse, simplified: boolean): GraphEdge[] {
+  return expanded.edges.map((edge) => ({
     id: `e-${edge.from}-${edge.to}-${edge.throw_height}`,
-    type: "graphEdge",
+    type: simplified ? "simplifiedEdge" : "graphEdge",
     source: edge.from,
     target: edge.to,
-    label: String(edge.throw_height),
+    ...(simplified ? {} : { label: String(edge.throw_height) }),
   }));
+}
 
-  return { nodes, edges };
+/** Synchronous all-in-one layout for small/builder graphs that don't need progress reporting. */
+export function computeGraphLayout(
+  data: GraphApiResponse,
+  reversed: boolean,
+  abbreviated: boolean,
+): { nodes: GraphNode[]; edges: GraphEdge[]; simplified: boolean } {
+  const simplified = data.num_nodes > SIMPLIFIED_THRESHOLD;
+  const expanded = expandCompactResponse(data, reversed, abbreviated);
+  const g = buildDagreGraph(expanded);
+  runDagreLayout(g);
+  const nodes = extractNodes(g, expanded, expanded.ground_state);
+  const edges = extractEdges(expanded, simplified);
+  return { nodes, edges, simplified };
 }

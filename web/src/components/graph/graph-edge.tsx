@@ -1,4 +1,10 @@
-import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from "@xyflow/react";
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
+  SimpleBezierEdge,
+  type EdgeProps,
+} from "@xyflow/react";
 
 function GraphEdgeComponent({
   id,
@@ -73,4 +79,7 @@ function GraphEdgeComponent({
   );
 }
 
-export const graphEdgeTypes = { graphEdge: GraphEdgeComponent };
+export const graphEdgeTypes = {
+  graphEdge: GraphEdgeComponent,
+  simplifiedEdge: SimpleBezierEdge,
+};
