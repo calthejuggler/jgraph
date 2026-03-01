@@ -9,7 +9,7 @@ import {
 import { MenuIcon } from "lucide-react";
 
 import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
-import { LocaleToggle } from "@/components/locale-toggle";
+import { LOCALE_LABELS, LocaleToggle } from "@/components/locale-toggle";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -92,15 +92,13 @@ function AuthedLayout() {
               <DropdownMenuItem onClick={toggleTheme}>
                 {theme === "dark" ? m.nav_theme_light() : m.nav_theme_dark()}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  const current = getLocale();
-                  const next = locales.find((l) => l !== current) ?? locales[0];
-                  setLocale(next);
-                }}
-              >
-                {getLocale().toUpperCase()}
-              </DropdownMenuItem>
+              {locales.map((locale) => (
+                <DropdownMenuItem key={locale} onClick={() => setLocale(locale)}>
+                  {locale === getLocale()
+                    ? `✓ ${LOCALE_LABELS[locale] ?? locale}`
+                    : (LOCALE_LABELS[locale] ?? locale)}
+                </DropdownMenuItem>
+              ))}
               <DropdownMenuItem
                 onClick={() => signOut().then(() => window.location.assign("/login"))}
               >

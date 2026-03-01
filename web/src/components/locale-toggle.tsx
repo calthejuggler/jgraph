@@ -1,14 +1,43 @@
+import { CheckIcon } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { getLocale, locales, setLocale } from "@/paraglide/runtime.js";
 
+export const LOCALE_LABELS: Record<string, string> = {
+  en: "English",
+  fr: "Français",
+  es: "Español",
+};
+
 export function LocaleToggle() {
   const current = getLocale();
-  const next = locales.find((l) => l !== current) ?? locales[0];
 
   return (
-    <Button variant="ghost" size="sm" onClick={() => setLocale(next)}>
-      {current.toUpperCase()}
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm">
+          {current.toUpperCase()}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {locales.map((locale) => (
+          <DropdownMenuItem
+            key={locale}
+            onClick={() => setLocale(locale)}
+            className="flex items-center justify-between"
+          >
+            {LOCALE_LABELS[locale] ?? locale}
+            {locale === current && <CheckIcon className="ml-2 size-4" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
