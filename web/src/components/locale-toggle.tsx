@@ -15,6 +15,7 @@ export const LOCALE_LABELS: Record<string, string> = {
   fr: "Français",
   es: "Español",
   nl: "Nederlands",
+  de: "Deutsch",
 };
 
 export function LocaleToggle() {
