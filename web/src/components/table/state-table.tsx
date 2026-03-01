@@ -9,13 +9,15 @@ interface StateTableProps {
   data: TableApiResponse;
   reversed: boolean;
   abbreviated: boolean;
-  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  scrollElement: HTMLDivElement | null;
 }
 
 const ROW_HEIGHT = 33;
-const COL_WIDTH = 65;
+const MIN_COL_WIDTH = 65;
+const CHAR_WIDTH = 8.4;
+const CELL_PADDING = 18; // px-2 (16px) + border (2px)
 
-export function StateTable({ data, reversed, abbreviated, scrollContainerRef }: StateTableProps) {
+export function StateTable({ data, reversed, abbreviated, scrollElement }: StateTableProps) {
   const labels = useMemo(
     () =>
       data.states.map((s) =>
@@ -41,9 +43,16 @@ export function StateTable({ data, reversed, abbreviated, scrollContainerRef }: 
   const rowCount = data.cells.length;
   const colCount = labels.length;
 
+  const colWidth = useMemo(() => {
+    const maxLen = labels.reduce((max, l) => Math.max(max, String(l).length), 0);
+    return Math.max(MIN_COL_WIDTH, Math.ceil(maxLen * CHAR_WIDTH + CELL_PADDING));
+  }, [labels]);
+
+  const stickyColWidth = colWidth;
+
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
-    getScrollElement: () => scrollContainerRef.current,
+    getScrollElement: () => scrollElement,
     estimateSize: () => ROW_HEIGHT,
     overscan: 10,
   });
@@ -51,12 +60,10 @@ export function StateTable({ data, reversed, abbreviated, scrollContainerRef }: 
   const colVirtualizer = useVirtualizer({
     horizontal: true,
     count: colCount,
-    getScrollElement: () => scrollContainerRef.current,
-    estimateSize: () => COL_WIDTH,
+    getScrollElement: () => scrollElement,
+    estimateSize: () => colWidth,
     overscan: 10,
   });
-
-  const stickyColWidth = COL_WIDTH + 20;
 
   const renderCell = useCallback(
     (rowIdx: number, colIdx: number) => {
@@ -88,9 +95,6 @@ export function StateTable({ data, reversed, abbreviated, scrollContainerRef }: 
           style={{
             width: stickyColWidth,
             height: ROW_HEIGHT,
-            position: "absolute",
-            top: 0,
-            left: 0,
           }}
         />
         {/* Header cells */}
@@ -100,7 +104,7 @@ export function StateTable({ data, reversed, abbreviated, scrollContainerRef }: 
           return (
             <div
               key={virtualCol.key}
-              className="border-border bg-muted inline-flex items-center justify-center border px-2 text-center text-sm font-medium whitespace-nowrap"
+              className="border-border bg-muted inline-flex items-center justify-center border px-2 text-center text-sm font-semibold whitespace-nowrap"
               style={{
                 position: "absolute",
                 top: 0,
@@ -132,18 +136,13 @@ export function StateTable({ data, reversed, abbreviated, scrollContainerRef }: 
           >
             {/* Sticky row header */}
             <div
-              className="border-border bg-background sticky left-0 z-10 inline-flex items-center justify-center border px-2 text-center whitespace-nowrap"
+              className="border-border bg-background sticky left-0 z-10 inline-flex items-center justify-center border px-2 text-center text-sm font-semibold whitespace-nowrap"
               style={{
                 width: stickyColWidth,
                 height: virtualRow.size,
-                position: "absolute",
-                top: 0,
-                left: 0,
               }}
             >
-              <span className={`font-mono font-medium ${isGroundRow ? "text-primary" : ""}`}>
-                {rowLabel}
-              </span>
+              <span className={`font-mono ${isGroundRow ? "text-primary" : ""}`}>{rowLabel}</span>
             </div>
             {/* Data cells */}
             {colVirtualizer.getVirtualItems().map((virtualCol) => (

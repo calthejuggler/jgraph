@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useCallback, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
 import { AlertCircle, Loader2 } from "lucide-react";
@@ -40,7 +40,10 @@ export function StateTableCanvas({
   view,
   onViewChange,
 }: StateTableCanvasProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null);
+  const scrollContainerRef = useCallback((node: HTMLDivElement | null) => {
+    setScrollContainer(node);
+  }, []);
 
   return (
     <div className="flex h-full flex-col gap-2 overflow-auto p-2 md:flex-row md:gap-4 md:overflow-hidden md:p-4">
@@ -63,15 +66,15 @@ export function StateTableCanvas({
           </CardContent>
         </Card>
       </div>
-      <div className="min-h-[300px] min-w-0 flex-1">
+      <div className="flex min-h-[300px] min-w-0 flex-1 flex-col">
         {data ? (
-          <Card className="h-full min-h-0 gap-0 overflow-hidden border-0 py-0">
-            <CardContent ref={scrollContainerRef} className="h-full min-h-0 overflow-auto px-0">
+          <Card className="min-h-0 flex-1 gap-0 overflow-hidden border-0 py-0">
+            <CardContent ref={scrollContainerRef} className="min-h-0 flex-1 overflow-auto px-0">
               <StateTable
                 data={data}
                 reversed={reversed}
                 abbreviated={abbreviated}
-                scrollContainerRef={scrollContainerRef}
+                scrollElement={scrollContainer}
               />
             </CardContent>
           </Card>
