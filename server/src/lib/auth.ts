@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { admin } from "better-auth/plugins";
 
 import { db } from "../db";
 
@@ -8,6 +9,7 @@ export const auth = betterAuth({
     provider: "pg",
     usePlural: true,
   }),
+  plugins: [admin({ defaultRole: "user" })],
   trustedOrigins: [Bun.env.CORS_ORIGIN ?? "http://localhost:5173"],
   emailAndPassword: {
     enabled: true,

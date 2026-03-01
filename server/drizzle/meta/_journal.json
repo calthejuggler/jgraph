@@ -15,6 +15,13 @@
       "when": 1771706903594,
       "tag": "0001_silly_vision",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772371658558,
+      "tag": "0002_giant_magdalene",
+      "breakpoints": true
     }
   ]
 }
