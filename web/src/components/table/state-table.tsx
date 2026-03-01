@@ -1,13 +1,6 @@
-"use no memo";
+import { useCallback, useMemo } from "react";
 
-import { useMemo } from "react";
-
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { toAbbreviatedLabel, toBinaryLabel } from "@/lib/binary-label";
 import type { TableApiResponse } from "@/lib/table-types";
@@ -16,9 +9,13 @@ interface StateTableProps {
   data: TableApiResponse;
   reversed: boolean;
   abbreviated: boolean;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export function StateTable({ data, reversed, abbreviated }: StateTableProps) {
+const ROW_HEIGHT = 33;
+const COL_WIDTH = 65;
+
+export function StateTable({ data, reversed, abbreviated, scrollContainerRef }: StateTableProps) {
   const labels = useMemo(
     () =>
       data.states.map((s) =>
@@ -41,96 +38,132 @@ export function StateTable({ data, reversed, abbreviated }: StateTableProps) {
     [data, reversed, abbreviated],
   );
 
-  const columnHelper = createColumnHelper<(number | null)[]>();
+  const rowCount = data.cells.length;
+  const colCount = labels.length;
 
-  const columns = useMemo(
-    () => [
-      columnHelper.display({
-        id: "source",
-        header: "",
-        cell: (info) => {
-          const label = labels[info.row.index];
-          const isGround = label === groundLabel;
-          return (
-            <span className={`font-mono font-medium ${isGround ? "text-primary" : ""}`}>
-              {label}
-            </span>
-          );
-        },
-      }),
-      ...labels.map((label, colIdx) =>
-        columnHelper.accessor((row) => row[colIdx], {
-          id: `col-${colIdx}`,
-          header: () => {
-            const isGround = label === groundLabel;
-            return <span className={`font-mono ${isGround ? "text-primary" : ""}`}>{label}</span>;
-          },
-          cell: (info) => {
-            const value = info.getValue();
-            return <span className="font-mono">{value != null ? value : "-"}</span>;
-          },
-        }),
-      ),
-    ],
-    [labels, groundLabel, columnHelper],
-  );
-
-  // eslint-disable-next-line react-hooks/incompatible-library -- opted out via "use no memo"
-  const table = useReactTable({
-    data: data.cells,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
+  const rowVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 10,
   });
 
+  const colVirtualizer = useVirtualizer({
+    horizontal: true,
+    count: colCount,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => COL_WIDTH,
+    overscan: 10,
+  });
+
+  const stickyColWidth = COL_WIDTH + 20;
+
+  const renderCell = useCallback(
+    (rowIdx: number, colIdx: number) => {
+      const value = data.cells[rowIdx]?.[colIdx];
+      return <span className="font-mono">{value != null ? value : "-"}</span>;
+    },
+    [data.cells],
+  );
+
   return (
-    <div>
-      <table className="w-full border-separate border-spacing-0 text-sm">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  scope="col"
-                  className={`border-border border px-2 py-1.5 text-center whitespace-nowrap ${
-                    header.column.id === "source"
-                      ? "bg-muted sticky top-0 left-0 z-30"
-                      : "bg-muted sticky top-0 z-20"
-                  }`}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) =>
-                cell.column.id === "source" ? (
-                  <th
-                    key={cell.id}
-                    scope="row"
-                    className="border-border bg-background sticky left-0 z-10 border px-2 py-1 text-center whitespace-nowrap"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </th>
-                ) : (
-                  <td
-                    key={cell.id}
-                    className="border-border border px-2 py-1 text-center whitespace-nowrap"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ),
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div
+      style={{
+        height: `${rowVirtualizer.getTotalSize() + ROW_HEIGHT}px`,
+        width: `${colVirtualizer.getTotalSize() + stickyColWidth}px`,
+        position: "relative",
+      }}
+    >
+      {/* Sticky header row */}
+      <div
+        className="bg-muted sticky top-0 z-20"
+        style={{
+          height: ROW_HEIGHT,
+          width: `${colVirtualizer.getTotalSize() + stickyColWidth}px`,
+        }}
+      >
+        {/* Top-left corner cell */}
+        <div
+          className="border-border bg-muted sticky left-0 z-30 inline-flex items-center justify-center border"
+          style={{
+            width: stickyColWidth,
+            height: ROW_HEIGHT,
+            position: "absolute",
+            top: 0,
+            left: 0,
+          }}
+        />
+        {/* Header cells */}
+        {colVirtualizer.getVirtualItems().map((virtualCol) => {
+          const label = labels[virtualCol.index];
+          const isGround = label === groundLabel;
+          return (
+            <div
+              key={virtualCol.key}
+              className="border-border bg-muted inline-flex items-center justify-center border px-2 text-center text-sm font-medium whitespace-nowrap"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: virtualCol.start + stickyColWidth,
+                width: virtualCol.size,
+                height: ROW_HEIGHT,
+              }}
+            >
+              <span className={`font-mono ${isGround ? "text-primary" : ""}`}>{label}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Rows */}
+      {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        const rowLabel = labels[virtualRow.index];
+        const isGroundRow = rowLabel === groundLabel;
+        return (
+          <div
+            key={virtualRow.key}
+            style={{
+              position: "absolute",
+              top: virtualRow.start + ROW_HEIGHT,
+              left: 0,
+              width: `${colVirtualizer.getTotalSize() + stickyColWidth}px`,
+              height: virtualRow.size,
+            }}
+          >
+            {/* Sticky row header */}
+            <div
+              className="border-border bg-background sticky left-0 z-10 inline-flex items-center justify-center border px-2 text-center whitespace-nowrap"
+              style={{
+                width: stickyColWidth,
+                height: virtualRow.size,
+                position: "absolute",
+                top: 0,
+                left: 0,
+              }}
+            >
+              <span className={`font-mono font-medium ${isGroundRow ? "text-primary" : ""}`}>
+                {rowLabel}
+              </span>
+            </div>
+            {/* Data cells */}
+            {colVirtualizer.getVirtualItems().map((virtualCol) => (
+              <div
+                key={virtualCol.key}
+                className="border-border inline-flex items-center justify-center border px-2 text-center text-sm whitespace-nowrap"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: virtualCol.start + stickyColWidth,
+                  width: virtualCol.size,
+                  height: virtualRow.size,
+                }}
+              >
+                {renderCell(virtualRow.index, virtualCol.index)}
+              </div>
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
