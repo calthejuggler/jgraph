@@ -7,6 +7,7 @@
     "db:generate": "bun --env-file=../.env run drizzle-kit generate",
     "db:migrate": "bun --env-file=../.env run drizzle-kit migrate",
     "db:push": "bun --env-file=../.env run drizzle-kit push",
+    "db:seed": "bun --env-file=../.env run scripts/seed.ts",
     "db:studio": "bun --env-file=../.env run drizzle-kit studio"
   },
   "dependencies": {

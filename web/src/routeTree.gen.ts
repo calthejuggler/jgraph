@@ -14,6 +14,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
 import { Route as AuthedBuilderRouteImport } from './routes/_authed/builder'
+import { Route as AuthedAdminRouteImport } from './routes/_authed/admin'
+import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -41,39 +43,58 @@ const AuthedBuilderRoute = AuthedBuilderRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_authed/builder.lazy').then((d) => d.Route),
 )
+const AuthedAdminRoute = AuthedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedAdminRoute,
+} as any).lazy(() =>
+  import('./routes/_authed/admin/index.lazy').then((d) => d.Route),
+)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthedIndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/admin': typeof AuthedAdminRouteWithChildren
   '/builder': typeof AuthedBuilderRoute
+  '/admin/': typeof AuthedAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/builder': typeof AuthedBuilderRoute
   '/': typeof AuthedIndexRoute
+  '/admin': typeof AuthedAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/_authed/admin': typeof AuthedAdminRouteWithChildren
   '/_authed/builder': typeof AuthedBuilderRoute
   '/_authed/': typeof AuthedIndexRoute
+  '/_authed/admin/': typeof AuthedAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/builder'
+  fullPaths: '/' | '/login' | '/signup' | '/admin' | '/builder' | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/signup' | '/builder' | '/'
+  to: '/login' | '/signup' | '/builder' | '/' | '/admin'
   id:
     | '__root__'
     | '/_authed'
     | '/login'
     | '/signup'
+    | '/_authed/admin'
     | '/_authed/builder'
     | '/_authed/'
+    | '/_authed/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,15 +140,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedBuilderRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/admin': {
+      id: '/_authed/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthedAdminRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/admin/': {
+      id: '/_authed/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthedAdminIndexRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
   }
 }
 
+interface AuthedAdminRouteChildren {
+  AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute
+}
+
+const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
+  AuthedAdminIndexRoute: AuthedAdminIndexRoute,
+}
+
+const AuthedAdminRouteWithChildren = AuthedAdminRoute._addFileChildren(
+  AuthedAdminRouteChildren,
+)
+
 interface AuthedRouteChildren {
+  AuthedAdminRoute: typeof AuthedAdminRouteWithChildren
   AuthedBuilderRoute: typeof AuthedBuilderRoute
   AuthedIndexRoute: typeof AuthedIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedAdminRoute: AuthedAdminRouteWithChildren,
   AuthedBuilderRoute: AuthedBuilderRoute,
   AuthedIndexRoute: AuthedIndexRoute,
 }

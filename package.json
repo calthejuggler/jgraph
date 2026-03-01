@@ -13,6 +13,7 @@
     "db:generate": "cd server && bun run db:generate",
     "db:migrate": "cd server && bun run db:migrate",
     "db:push": "cd server && bun run db:push",
+    "db:seed": "cd server && bun run db:seed",
     "db:studio": "cd server && bun run db:studio",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
