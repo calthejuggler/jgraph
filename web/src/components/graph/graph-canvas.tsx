@@ -10,12 +10,15 @@ import {
 } from "@xyflow/react";
 import { AlertCircle, Info, Loader2 } from "lucide-react";
 
+import { useIsDesktop } from "@/hooks/use-breakpoint";
 import { PHASE_LABELS, useGraphLayout } from "@/hooks/use-graph-layout";
 import { useTheme } from "@/hooks/use-theme";
 import type { GraphApiResponse, GraphEdge, GraphNode } from "@/lib/graph-types";
 import type { GraphsValues } from "@/lib/schemas";
 import type { ViewType } from "@/lib/view-types";
 
+import { QueryForm } from "../query-form";
+import { Card, CardContent } from "../ui/card";
 import { Progress } from "../ui/progress";
 import { GraphDetailsPanel } from "./graph-details-panel";
 import { graphEdgeTypes } from "./graph-edge";
@@ -58,6 +61,7 @@ export function GraphCanvas({
 }: GraphCanvasProps) {
   const { theme } = useTheme();
   const { layout, progress } = useGraphLayout(data, reversed, abbreviated);
+  const isDesktop = useIsDesktop();
 
   const isLayoutPending = !!data && !layout;
   const isLoading = isFetching || isLayoutPending;
@@ -65,81 +69,109 @@ export function GraphCanvas({
     ? `${data!.num_props}-${data!.max_height}-${reversed}-${abbreviated}`
     : "empty";
 
+  const queryFormProps = {
+    form,
+    onSubmit,
+    onFieldChange,
+    reversed,
+    onReversedChange,
+    abbreviated,
+    onAbbreviatedChange,
+    isFetching: isLoading,
+    error,
+    view,
+    onViewChange,
+  };
+
   return (
-    <ReactFlow
-      key={key}
-      defaultNodes={layout?.nodes ?? EMPTY_NODES}
-      defaultEdges={layout?.edges ?? EMPTY_EDGES}
-      nodeTypes={graphNodeTypes}
-      edgeTypes={graphEdgeTypes}
-      nodesConnectable={false}
-      edgesFocusable={false}
-      nodesFocusable={false}
-      elementsSelectable={false}
-      defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
-      fitView
-      fitViewOptions={FIT_VIEW_OPTIONS}
-      colorMode={theme}
-    >
-      <Background variant={BackgroundVariant.Dots} />
-      <Controls />
-      {(data?.num_nodes ?? 0) > 30 && <MiniMap />}
-      <GraphQueryPanel
-        form={form}
-        onSubmit={onSubmit}
-        onFieldChange={onFieldChange}
-        reversed={reversed}
-        onReversedChange={onReversedChange}
-        abbreviated={abbreviated}
-        onAbbreviatedChange={onAbbreviatedChange}
-        isFetching={isLoading}
-        error={error}
-        view={view}
-        onViewChange={onViewChange}
-      />
-      <GraphDetailsPanel nodeCount={data?.num_nodes} edgeCount={data?.num_edges} />
-      {!layout && !isLoading && error && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-2">
-            <AlertCircle className="text-destructive h-8 w-8" />
-            <p className="text-destructive text-lg">Failed to load graph</p>
-            <p className="text-muted-foreground text-sm">{error.message}</p>
-          </div>
-        </div>
-      )}
-      {!layout && isLoading && !error && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-            {isFetching ? (
-              <p className="text-muted-foreground text-lg">Fetching graph data...</p>
-            ) : progress ? (
-              <div className="flex w-48 flex-col items-center gap-2">
-                <p className="text-muted-foreground text-sm">{PHASE_LABELS[progress.phase]}</p>
-                <Progress
-                  value={((progress.phaseIndex + 1) / progress.totalPhases) * 100}
-                  className="w-full"
-                />
+    <div className="flex h-full flex-col">
+      {/* Mobile: query form + stats as top sections */}
+      {!isDesktop && (
+        <Card className="m-2">
+          <CardContent className="p-3">
+            <QueryForm {...queryFormProps} />
+            {data && (
+              <div className="text-muted-foreground mt-2 flex gap-4 text-sm">
+                <span>
+                  <span className="text-muted-foreground">States:</span> {data.num_nodes}
+                </span>
+                <span>
+                  <span className="text-muted-foreground">Transitions:</span> {data.num_edges}
+                </span>
               </div>
-            ) : (
-              <p className="text-muted-foreground text-lg">Computing layout...</p>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
-      {layout?.simplified && (
-        <div className="absolute top-2 left-1/2 z-50 -translate-x-1/2">
-          <div className="bg-muted text-muted-foreground flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs shadow-sm">
-            <Info className="h-3.5 w-3.5" />
-            Edge labels hidden for performance
-          </div>
-        </div>
-      )}
-      {layout && isLoading && (
-        <div className="bg-background/50 pointer-events-none absolute inset-0 flex items-center justify-center backdrop-blur-[2px]">
-          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-        </div>
-      )}
-    </ReactFlow>
+      {/* Graph */}
+      <div className="min-h-0 flex-1">
+        <ReactFlow
+          key={key}
+          defaultNodes={layout?.nodes ?? EMPTY_NODES}
+          defaultEdges={layout?.edges ?? EMPTY_EDGES}
+          nodeTypes={graphNodeTypes}
+          edgeTypes={graphEdgeTypes}
+          nodesConnectable={false}
+          edgesFocusable={false}
+          nodesFocusable={false}
+          elementsSelectable={false}
+          defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
+          fitView
+          fitViewOptions={FIT_VIEW_OPTIONS}
+          colorMode={theme}
+        >
+          <Background variant={BackgroundVariant.Dots} />
+          <Controls />
+          {(data?.num_nodes ?? 0) > 30 && <MiniMap />}
+          {/* Desktop: overlay panels */}
+          {isDesktop && <GraphQueryPanel {...queryFormProps} />}
+          {isDesktop && (
+            <GraphDetailsPanel nodeCount={data?.num_nodes} edgeCount={data?.num_edges} />
+          )}
+          {!layout && !isLoading && error && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-2">
+                <AlertCircle className="text-destructive h-8 w-8" />
+                <p className="text-destructive text-lg">Failed to load graph</p>
+                <p className="text-muted-foreground text-sm">{error.message}</p>
+              </div>
+            </div>
+          )}
+          {!layout && isLoading && !error && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+                {isFetching ? (
+                  <p className="text-muted-foreground text-lg">Fetching graph data...</p>
+                ) : progress ? (
+                  <div className="flex w-48 flex-col items-center gap-2">
+                    <p className="text-muted-foreground text-sm">{PHASE_LABELS[progress.phase]}</p>
+                    <Progress
+                      value={((progress.phaseIndex + 1) / progress.totalPhases) * 100}
+                      className="w-full"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-lg">Computing layout...</p>
+                )}
+              </div>
+            </div>
+          )}
+          {layout?.simplified && (
+            <div className="absolute top-2 left-1/2 z-50 -translate-x-1/2">
+              <div className="bg-muted text-muted-foreground flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs shadow-sm">
+                <Info className="h-3.5 w-3.5" />
+                Edge labels hidden for performance
+              </div>
+            </div>
+          )}
+          {layout && isLoading && (
+            <div className="bg-background/50 pointer-events-none absolute inset-0 flex items-center justify-center backdrop-blur-[2px]">
+              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+            </div>
+          )}
+        </ReactFlow>
+      </div>
+    </div>
   );
 }

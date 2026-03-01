@@ -40,10 +40,10 @@ export function ScatterChartCanvas({
   onViewChange,
 }: ScatterChartCanvasProps) {
   return (
-    <div className="flex h-full gap-4 p-4">
+    <div className="flex h-full flex-col gap-2 overflow-auto p-2 md:flex-row md:gap-4 md:overflow-hidden md:p-4">
       <div className="shrink-0">
-        <Card className="w-72 shadow-lg">
-          <CardContent className="pt-4">
+        <Card className="w-full shadow-lg md:w-72">
+          <CardContent className="p-3 md:pt-4">
             <QueryForm
               form={form}
               onSubmit={onSubmit}
@@ -60,7 +60,7 @@ export function ScatterChartCanvas({
           </CardContent>
         </Card>
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="min-h-[300px] min-w-0 flex-1">
         {data ? (
           <Card className="h-full min-h-0 gap-0 overflow-hidden border-0 py-0">
             <CardContent className="h-full min-h-0 overflow-auto px-0">

@@ -59,9 +59,9 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
   }, [state.steps, state.groundState]);
 
   return (
-    <div className="flex h-full gap-4 p-4">
+    <div className="flex h-full flex-col gap-4 overflow-auto p-4 md:flex-row md:overflow-hidden">
       <div className="shrink-0">
-        <Card className="w-80 shadow-lg">
+        <Card className="w-full md:w-80 md:shadow-lg">
           <CardContent className="space-y-4 pt-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold">Setup</span>
@@ -153,14 +153,14 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-4">
-        <Card className="min-h-0 flex-1 shadow-lg">
+        <Card className="order-2 h-[300px] md:order-1 md:h-auto md:min-h-0 md:flex-1 md:shadow-lg">
           <CardContent className="h-full p-0">
             <BuilderGraphPanel state={state} maxHeight={maxHeight} numProps={numProps} />
           </CardContent>
         </Card>
 
         {data ? (
-          <Card className="shrink-0 shadow-lg">
+          <Card className="order-1 shrink-0 md:order-2 md:shadow-lg">
             <CardContent className="pt-4">
               <ThrowPicker
                 throws={data.throws}
@@ -175,7 +175,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
             </CardContent>
           </Card>
         ) : isFetching ? (
-          <Card className="shrink-0 shadow-lg">
+          <Card className="order-1 shrink-0 md:order-2 md:shadow-lg">
             <CardContent className="flex items-center justify-center py-8">
               <div className="flex flex-col items-center gap-2">
                 <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
@@ -184,7 +184,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
             </CardContent>
           </Card>
         ) : error ? (
-          <Card className="shrink-0 shadow-lg">
+          <Card className="order-1 shrink-0 md:order-2 md:shadow-lg">
             <CardContent className="pt-4">
               <p className="text-destructive text-sm">{error.message}</p>
             </CardContent>
