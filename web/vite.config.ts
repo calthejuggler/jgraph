@@ -39,6 +39,16 @@ export default defineConfig({
           ) {
             return "vendor-react-flow";
           }
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("node_modules/scheduler/")
+          ) {
+            return "vendor-react";
+          }
+          if (id.includes("node_modules/@radix-ui") || id.includes("node_modules/radix-ui")) {
+            return "vendor-radix";
+          }
         },
       },
     },
