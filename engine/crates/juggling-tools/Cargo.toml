@@ -6,7 +6,7 @@ description = "Core juggling algorithms: state notation, transitions, and graph 
 license = "MIT"
 
 [dependencies]
-rayon = { version = "1.10", optional = true }
+rayon = { version = "1.11", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 
 [features]
