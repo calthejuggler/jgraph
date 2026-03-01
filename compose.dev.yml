@@ -1,3 +1,5 @@
+name: juggling-tools-dev
+
 services:
   db:
     image: postgres:18.2-alpine

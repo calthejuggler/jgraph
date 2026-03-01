@@ -1,4 +1,6 @@
-/engine/target/
-/engine/debug/
+node_modules/
 .git/
 .env
+engine/target/
+engine/debug/
+web/dist/

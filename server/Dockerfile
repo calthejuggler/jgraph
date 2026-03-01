@@ -3,17 +3,18 @@ FROM oven/bun:${BUN_VERSION}-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json package.json
-COPY bun.lock bun.lock
+COPY package.json bun.lock ./
+COPY server/package.json ./server/
+COPY web/package.json ./web/
 
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --ignore-scripts
 
-COPY ./src ./src
-COPY ./drizzle ./drizzle
+COPY server/src ./server/src
+COPY server/drizzle ./server/drizzle
 
 ENV NODE_ENV=production
 
-RUN bun build \
+RUN cd server && bun build \
 	--compile \
 	--minify-whitespace \
 	--minify-syntax \
@@ -25,8 +26,8 @@ RUN apk add --no-cache libstdc++ libgcc
 
 WORKDIR /app
 
-COPY --from=builder /app/server server
-COPY --from=builder /app/drizzle ./drizzle
+COPY --from=builder /app/server/server server
+COPY --from=builder /app/server/drizzle ./drizzle
 
 ENV NODE_ENV=production
 

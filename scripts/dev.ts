@@ -22,20 +22,18 @@ function log(tag: string, msg: string) {
 }
 
 async function ensureDeps() {
-  for (const dir of ["web", "server"]) {
-    const nodeModules = resolve(ROOT, dir, "node_modules");
-    if (!existsSync(nodeModules)) {
-      log("infra", `Installing dependencies in ${dir}/...`);
-      const proc = Bun.spawn(["bun", "install", "--frozen-lockfile"], {
-        cwd: resolve(ROOT, dir),
-        stdout: "inherit",
-        stderr: "inherit",
-      });
-      await proc.exited;
-      if (proc.exitCode !== 0) {
-        console.error(`Failed to install dependencies in ${dir}/`);
-        process.exit(1);
-      }
+  const nodeModules = resolve(ROOT, "node_modules");
+  if (!existsSync(nodeModules)) {
+    log("infra", "Installing dependencies...");
+    const proc = Bun.spawn(["bun", "install", "--frozen-lockfile"], {
+      cwd: ROOT,
+      stdout: "inherit",
+      stderr: "inherit",
+    });
+    await proc.exited;
+    if (proc.exitCode !== 0) {
+      console.error("Failed to install dependencies");
+      process.exit(1);
     }
   }
 }
