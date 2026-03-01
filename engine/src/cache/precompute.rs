@@ -23,7 +23,7 @@ pub async fn precompute(
     for num_props in 1u8..=MAX_MAX_HEIGHT {
         for max_height in num_props..=MAX_MAX_HEIGHT {
             let num_states = combinations(max_height as u64, num_props as u64);
-            if num_states > 10_000 {
+            if num_states > 15_000 {
                 skipped += 1;
                 continue;
             }

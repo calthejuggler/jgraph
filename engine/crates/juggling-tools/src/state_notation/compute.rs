@@ -2,6 +2,9 @@ use super::graph::{Params, ParamsError};
 use super::state::State;
 use super::transition::Transition;
 
+#[cfg(feature = "rayon")]
+use rayon::iter::{IntoParallelRefIterator as _, ParallelIterator as _};
+
 /// All valid states and transitions for a given set of [`Params`].
 #[derive(Debug)]
 pub struct TransitionSet {
@@ -27,6 +30,13 @@ pub fn compute_transitions(params: &Params) -> Result<TransitionSet, ParamsError
 
     let states = State::generate(params.num_props, params.max_height);
 
+    #[cfg(feature = "rayon")]
+    let transitions: Vec<_> = states
+        .par_iter()
+        .flat_map_iter(|state| Transition::from_state(*state, params.max_height))
+        .collect();
+
+    #[cfg(not(feature = "rayon"))]
     let transitions: Vec<_> = states
         .iter()
         .flat_map(|state| Transition::from_state(*state, params.max_height))
