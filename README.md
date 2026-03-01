@@ -1,6 +1,6 @@
 # Juggling Tools
 
-Compute and explore siteswap juggling state graphs. Pick a number of props and a max throw height, and the app generates every valid juggling state and the throws between them.
+Tools for computing and exploring siteswap juggling patterns. Pick a number of props and a max throw height, and the app generates every valid juggling state and the throws between them. Visualize the results as a graph, state table, or scatter chart, or use the siteswap builder to construct patterns interactively.
 
 ## How it works
 
@@ -13,6 +13,7 @@ Each juggling state is stored as a 32-bit field where set bits represent future 
 | Frontend | React 19, Vite, TanStack Router + Query, Tailwind CSS 4, Shadcn/Radix UI |
 | Backend  | Elysia.js (Bun), better-auth, Drizzle ORM, PostgreSQL                    |
 | Engine   | Rust, Axum, Tokio with a 3-tier cache (memory / Redis / file)            |
+| i18n     | Paraglide.js (EN, FR, ES, NL, DE)                                        |
 | Infra    | Docker Compose, Caddy                                                    |
 
 ## Prerequisites
@@ -45,13 +46,16 @@ engine/    Rust graph computation with multi-tier caching
 
 Auth is email/password via better-auth (`/api/auth/*`).
 
-Graph query (requires auth):
+State notation endpoints (require auth):
 
 ```
-GET /api/v1/graphs?num_props=3&max_height=5&compact=false
+GET /api/v1/state-notation/graph?num_props=3&max_height=5
+GET /api/v1/state-notation/table?num_props=3&max_height=5
+GET /api/v1/state-notation/throws?state=7&max_height=5
+GET /api/v1/state-notation/config
 ```
 
-Returns nodes, edges with throw heights, and counts. Responses use ETags and a 3-tier cache in the engine. Common graphs are precomputed on startup.
+Responses use ETags and a 3-tier cache in the engine. Common results are precomputed on startup.
 
 ## Code quality
 
