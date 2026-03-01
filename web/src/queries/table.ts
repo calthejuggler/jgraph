@@ -13,7 +13,7 @@ export const tableQueries = {
       staleTime: Infinity,
       retry: (_failureCount: number, error: Error) =>
         !error.message.startsWith("Too many requests"),
-      queryFn: async () => {
+      queryFn: async ({ signal }) => {
         const searchParams = new URLSearchParams({
           num_props: String(params.num_props),
           max_height: String(params.max_height),
@@ -22,6 +22,7 @@ export const tableQueries = {
 
         const res = await fetch(`${API_URL}/api/v1/state-notation/table?${searchParams}`, {
           credentials: "include",
+          signal,
         });
 
         if (res.status === 429) {

@@ -9,9 +9,10 @@ export const configQueries = {
     queryOptions({
       queryKey: [...configQueries.gets()] as const,
       staleTime: Infinity,
-      queryFn: async () => {
+      queryFn: async ({ signal }) => {
         const res = await fetch(`${API_URL}/api/v1/config`, {
           credentials: "include",
+          signal,
         });
         if (!res.ok) throw new Error("Failed to fetch config");
         return res.json() as Promise<{ max_max_height: number }>;

@@ -27,6 +27,8 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+const LARGE_DATASET_THRESHOLD = 5000;
+
 function CustomTooltip({
   active,
   payload,
@@ -91,6 +93,8 @@ export function ScatterChartView({ data, reversed, abbreviated }: ScatterChartVi
 
   const ticks = useMemo(() => labels.map((_, i) => i), [labels]);
 
+  const isLarge = points.length > LARGE_DATASET_THRESHOLD;
+
   return (
     <ChartContainer config={chartConfig} className="aspect-auto h-full w-full">
       <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
@@ -113,9 +117,9 @@ export function ScatterChartView({ data, reversed, abbreviated }: ScatterChartVi
           tickFormatter={(i: number) => labels[i] ?? ""}
           label={{ value: "Destination state", angle: -90, position: "left", offset: 0 }}
         />
-        <ZAxis type="number" dataKey="size" range={[20, 200]} />
-        <Tooltip content={<CustomTooltip />} />
-        <Scatter data={points} fill="var(--color-throw)" />
+        <ZAxis type="number" dataKey="size" range={[20, isLarge ? 100 : 200]} />
+        {!isLarge && <Tooltip content={<CustomTooltip />} />}
+        <Scatter data={points} fill="var(--color-throw)" isAnimationActive={!isLarge} />
       </ScatterChart>
     </ChartContainer>
   );

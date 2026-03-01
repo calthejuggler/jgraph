@@ -17,7 +17,7 @@ export const throwsQueries = {
       staleTime: Infinity,
       retry: (_failureCount: number, error: Error) =>
         !error.message.startsWith("Too many requests"),
-      queryFn: async () => {
+      queryFn: async ({ signal }) => {
         const searchParams = new URLSearchParams({
           state: String(params.state),
           max_height: String(params.max_height),
@@ -26,6 +26,7 @@ export const throwsQueries = {
 
         const res = await fetch(`${API_URL}/api/v1/state-notation/throws?${searchParams}`, {
           credentials: "include",
+          signal,
         });
 
         if (res.status === 429) {

@@ -39,7 +39,7 @@ export function QueryForm({
   onViewChange,
 }: QueryFormProps) {
   const { data: config } = useConfigQuery();
-  const effectiveMax = Math.min(config?.max_max_height ?? UI_MAX_HEIGHT, UI_MAX_HEIGHT);
+  const effectiveMax = config?.max_max_height ?? UI_MAX_HEIGHT;
 
   return (
     <div className="space-y-3">

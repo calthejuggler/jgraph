@@ -26,7 +26,7 @@ export const graphQueries = {
         }
         return true;
       },
-      queryFn: async () => {
+      queryFn: async ({ signal }) => {
         const searchParams = new URLSearchParams({
           num_props: String(params.num_props),
           max_height: String(params.max_height),
@@ -35,6 +35,7 @@ export const graphQueries = {
 
         const res = await fetch(`${API_URL}/api/v1/state-notation/graph?${searchParams}`, {
           credentials: "include",
+          signal,
         });
 
         if (res.status === 429) {
