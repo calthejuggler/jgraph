@@ -15,6 +15,7 @@ pub async fn precompute(
     memory_cache: &moka::future::Cache<String, Bytes>,
     redis_cache: Option<&RedisCache>,
     file_cache: &FileCache,
+    schema_version: &str,
 ) {
     let mut computed = 0u32;
     let mut skipped = 0u32;
@@ -36,10 +37,9 @@ pub async fn precompute(
                 for &reversed in reversed_variants {
                     let effective_reversed = !compact && reversed;
 
-                    // Precompute graph
                     let graph_key = format!(
-                        "{}-{}-{}-{}",
-                        num_props, max_height, compact, effective_reversed
+                        "v{}-{}-{}-{}-{}",
+                        schema_version, num_props, max_height, compact, effective_reversed
                     );
                     if file_cache.exists(&graph_key).await {
                         cached += 1;
@@ -68,10 +68,9 @@ pub async fn precompute(
                         computed += 1;
                     }
 
-                    // Precompute table
                     let table_key = format!(
-                        "table-{}-{}-{}-{}",
-                        num_props, max_height, compact, effective_reversed
+                        "table-v{}-{}-{}-{}-{}",
+                        schema_version, num_props, max_height, compact, effective_reversed
                     );
                     if file_cache.exists(&table_key).await {
                         cached += 1;

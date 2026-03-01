@@ -42,9 +42,16 @@ async fn main() {
 
     let cache_dir = std::env::var("CACHE_DIR").unwrap_or_else(|_| "/app/cache".to_string());
     let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://redis:6379".to_string());
+    let cache_max_size: u64 = std::env::var("CACHE_MAX_SIZE_MB")
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+        .unwrap_or(2048)
+        * 1024
+        * 1024;
 
     let memory_cache = cache::memory::build_memory_cache();
-    let file_cache = FileCache::new(PathBuf::from(cache_dir)).await;
+    let file_cache =
+        FileCache::with_limits(PathBuf::from(cache_dir), cache_max_size, 5 * 1024 * 1024).await;
 
     let redis_cache = match RedisCache::new(&redis_url).await {
         Ok(rc) => {
@@ -89,6 +96,7 @@ async fn main() {
             &precompute_state.memory_cache,
             precompute_state.redis_cache.as_ref(),
             &precompute_state.file_cache,
+            &precompute_state.schema_version,
         )
         .await;
     });

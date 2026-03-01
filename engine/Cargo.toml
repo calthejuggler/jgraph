@@ -20,6 +20,7 @@ tokio-util = { version = "0.7", features = ["io"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 uuid = { version = "1", features = ["v4"] }
+zstd = "0.13"
 
 [features]
 state-u8 = ["juggling-tools/state-u8"]
