@@ -46,10 +46,10 @@ impl FileCache {
 
         let mut total: u64 = 0;
         while let Ok(Some(entry)) = entries.next_entry().await {
-            if let Ok(meta) = entry.metadata().await {
-                if meta.is_file() {
-                    total += meta.len();
-                }
+            if let Ok(meta) = entry.metadata().await
+                && meta.is_file()
+            {
+                total += meta.len();
             }
         }
         self.total_size.store(total, Ordering::Relaxed);
@@ -139,11 +139,11 @@ impl FileCache {
 
         let mut files: Vec<(PathBuf, u64, std::time::SystemTime)> = Vec::new();
         while let Ok(Some(entry)) = entries.next_entry().await {
-            if let Ok(meta) = entry.metadata().await {
-                if meta.is_file() {
-                    let modified = meta.modified().unwrap_or(std::time::UNIX_EPOCH);
-                    files.push((entry.path(), meta.len(), modified));
-                }
+            if let Ok(meta) = entry.metadata().await
+                && meta.is_file()
+            {
+                let modified = meta.modified().unwrap_or(std::time::UNIX_EPOCH);
+                files.push((entry.path(), meta.len(), modified));
             }
         }
 
