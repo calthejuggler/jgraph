@@ -1,7 +1,10 @@
 {
   "name": "juggling-tools",
   "private": true,
-  "workspaces": ["web", "server"],
+  "workspaces": [
+    "web",
+    "server"
+  ],
   "packageManager": "bun@1.3.10",
   "type": "module",
   "scripts": {

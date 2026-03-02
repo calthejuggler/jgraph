@@ -15,7 +15,7 @@ export function BuilderPage() {
   const submitted: BuilderValues = { num_props, max_height };
 
   const form = useForm<BuilderValues>({
-    resolver: zodResolver(builderSchema),
+    resolver: zodResolver(builderSchema()),
     defaultValues: submitted,
     mode: "onChange",
   });

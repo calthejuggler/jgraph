@@ -51,7 +51,7 @@ export function GraphsPage() {
   const submitted: GraphsValues = { num_props, max_height };
 
   const form = useForm<GraphsValues>({
-    resolver: zodResolver(graphsSchema),
+    resolver: zodResolver(graphsSchema()),
     defaultValues: submitted,
     mode: "onChange",
   });

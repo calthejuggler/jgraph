@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages.js";
 import { getLocale, locales, setLocale } from "@/paraglide/runtime.js";
 
-const GRAPH_SEARCH = { num_props: 3, max_height: 5, view: "graph" } as const;
+export const GRAPH_SEARCH = { num_props: 3, max_height: 5, view: "graph" } as const;
 const BUILDER_SEARCH = { num_props: 3, max_height: 5 } as const;
 const ADMIN_SEARCH = { page: 1, sortBy: "createdAt", sortDirection: "desc" } as const;
 
@@ -88,6 +88,9 @@ function AuthedLayout() {
                   </Link>
                 </DropdownMenuItem>
               )}
+              <DropdownMenuItem asChild>
+                <Link to="/settings">{m.nav_settings()}</Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={toggleTheme}>
                 {theme === "dark" ? m.nav_theme_light() : m.nav_theme_dark()}
@@ -147,6 +150,14 @@ function AuthedLayout() {
             )}
           </nav>
           <div className="flex items-center justify-end gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className={cn(currentPath === "/settings" && "bg-accent")}
+            >
+              <Link to="/settings">{m.nav_settings()}</Link>
+            </Button>
             <LocaleToggle />
             <Button variant="ghost" size="sm" onClick={toggleTheme}>
               {theme === "dark" ? m.nav_theme_light() : m.nav_theme_dark()}

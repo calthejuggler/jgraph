@@ -1,100 +1,125 @@
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "@tanstack/react-router";
 
-import { LocaleToggle } from "@/components/locale-toggle";
+import { AuthPageLayout } from "@/components/auth-page-layout";
+import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { signIn } from "@/lib/auth-client";
+import { authClient, signIn } from "@/lib/auth-client";
 import { loginSchema, type LoginValues } from "@/lib/schemas";
+import { GRAPH_SEARCH } from "@/routes/_authed";
 
 import { m } from "@/paraglide/messages.js";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState("");
+  const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [showResend, setShowResend] = useState(false);
 
   const form = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(loginSchema()),
     defaultValues: { email: "", password: "" },
   });
 
   async function onSubmit(values: LoginValues) {
     setServerError("");
+    setShowResend(false);
     try {
       const res = await signIn.email(values);
       if (res.error) {
-        setServerError(res.error.message ?? m.auth_login_failed());
+        if (res.error.code === "EMAIL_NOT_VERIFIED") {
+          setShowResend(true);
+        } else {
+          setServerError(res.error.message ?? m.auth_login_failed());
+        }
       } else {
-        navigate({ to: "/", search: { num_props: 3, max_height: 5, view: "graph" } });
+        navigate({ to: "/", search: GRAPH_SEARCH });
       }
     } catch {
       setServerError(m.auth_unexpected_error());
     }
   }
 
+  async function handleResendVerification() {
+    setResendStatus("sending");
+    try {
+      const res = await authClient.sendVerificationEmail({
+        email: form.getValues("email"),
+        callbackURL: `${window.location.origin}/verify-email`,
+      });
+      if (res.error) {
+        setServerError(res.error.message ?? m.auth_unexpected_error());
+        setResendStatus("idle");
+      } else {
+        setResendStatus("sent");
+      }
+    } catch {
+      setServerError(m.auth_unexpected_error());
+      setResendStatus("idle");
+    }
+  }
+
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4">
-      <div className="absolute top-4 right-4">
-        <LocaleToggle />
-      </div>
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">{m.auth_sign_in()}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <Controller
-              name="email"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="email">{m.auth_email_label()}</FieldLabel>
-                  <Input
-                    {...field}
-                    id="email"
-                    type="email"
-                    placeholder={m.auth_email_placeholder()}
-                    aria-invalid={fieldState.invalid}
-                  />
-                  <FieldError errors={[fieldState.error]} />
-                </Field>
-              )}
-            />
-            <Controller
-              name="password"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="password">{m.auth_password_label()}</FieldLabel>
-                  <Input
-                    {...field}
-                    id="password"
-                    type="password"
-                    placeholder={m.auth_password_placeholder()}
-                    aria-invalid={fieldState.invalid}
-                  />
-                  <FieldError errors={[fieldState.error]} />
-                </Field>
-              )}
-            />
-            {serverError && <p className="text-destructive text-sm">{serverError}</p>}
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? m.auth_signing_in() : m.auth_sign_in()}
-            </Button>
-          </form>
-          <p className="text-muted-foreground mt-4 text-center text-sm">
-            {m.auth_no_account()}{" "}
-            <Link to="/signup" className="text-primary underline">
-              {m.auth_sign_up()}
-            </Link>
+    <AuthPageLayout title={m.auth_sign_in()}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          name="email"
+          control={form.control}
+          label={m.auth_email_label()}
+          type="email"
+          placeholder={m.auth_email_placeholder()}
+          autoComplete="email"
+        />
+        <FormField
+          name="password"
+          control={form.control}
+          label={m.auth_password_label()}
+          type="password"
+          placeholder={m.auth_password_placeholder()}
+          autoComplete="current-password"
+        />
+        {serverError && (
+          <p role="alert" className="text-destructive text-sm">
+            {serverError}
           </p>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+        {showResend && (
+          <div className="space-y-2">
+            <p className="text-muted-foreground text-sm">{m.auth_email_not_verified()}</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              disabled={resendStatus === "sending" || resendStatus === "sent"}
+              onClick={handleResendVerification}
+            >
+              {resendStatus === "sending"
+                ? m.auth_resend_verification_sending()
+                : resendStatus === "sent"
+                  ? m.auth_resend_verification_sent()
+                  : m.auth_resend_verification()}
+            </Button>
+          </div>
+        )}
+        <div className="text-right">
+          <Link to="/forgot-password" className="text-muted-foreground text-xs underline">
+            {m.auth_forgot_password()}
+          </Link>
+        </div>
+        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? m.auth_signing_in() : m.auth_sign_in()}
+        </Button>
+      </form>
+      <p className="text-muted-foreground mt-4 text-center text-sm">
+        {m.auth_no_account()}{" "}
+        <Link to="/signup" className="text-primary underline">
+          {m.auth_sign_up()}
+        </Link>
+      </p>
+    </AuthPageLayout>
   );
 }

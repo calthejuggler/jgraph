@@ -13,12 +13,13 @@
   "dependencies": {
     "@elysiajs/cors": "^1.4.1",
     "@elysiajs/openapi": "^1.4.14",
+    "@sinclair/typebox": "^0.34.15",
     "better-auth": "^1.5.0",
     "drizzle-orm": "^0.45.1",
-    "@sinclair/typebox": "^0.34.15",
     "elysia": "1.4.27",
     "elysia-rate-limit": "^4.5.0",
-    "postgres": "^3.4.8"
+    "postgres": "^3.4.8",
+    "resend": "^6.9.3"
   },
   "devDependencies": {
     "bun-types": "1.3.10",
