@@ -58,7 +58,7 @@ function AuthedLayout() {
       )}
       <header className="border-border bg-card border-b">
         {/* Mobile header */}
-        <div className="flex items-center justify-between px-4 py-3 md:hidden">
+        <div className="flex items-center justify-between px-4 py-3 lg:hidden">
           <h1 className="text-lg font-semibold">{m.app_name()}</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -111,7 +111,7 @@ function AuthedLayout() {
           </DropdownMenu>
         </div>
         {/* Desktop header */}
-        <div className="hidden grid-cols-3 items-center px-4 py-3 md:grid">
+        <div className="hidden grid-cols-3 items-center px-4 py-3 lg:grid">
           <div className="flex items-center gap-4">
             <h1 className="text-lg font-semibold">{m.app_name()}</h1>
           </div>
