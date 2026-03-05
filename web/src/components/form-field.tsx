@@ -2,6 +2,7 @@ import { Controller, type Control, type FieldPath, type FieldValues } from "reac
 
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface FormFieldProps<T extends FieldValues> {
   name: FieldPath<T>;
@@ -10,6 +11,8 @@ interface FormFieldProps<T extends FieldValues> {
   type?: string;
   placeholder?: string;
   autoComplete?: string;
+  multiline?: boolean;
+  rows?: number;
 }
 
 export function FormField<T extends FieldValues>({
@@ -19,6 +22,8 @@ export function FormField<T extends FieldValues>({
   type = "text",
   placeholder,
   autoComplete,
+  multiline,
+  rows,
 }: FormFieldProps<T>) {
   return (
     <Controller
@@ -27,14 +32,24 @@ export function FormField<T extends FieldValues>({
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
           <FieldLabel htmlFor={name}>{label}</FieldLabel>
-          <Input
-            {...field}
-            id={name}
-            type={type}
-            placeholder={placeholder}
-            autoComplete={autoComplete}
-            aria-invalid={fieldState.invalid}
-          />
+          {multiline ? (
+            <Textarea
+              {...field}
+              id={name}
+              placeholder={placeholder}
+              rows={rows}
+              aria-invalid={fieldState.invalid}
+            />
+          ) : (
+            <Input
+              {...field}
+              id={name}
+              type={type}
+              placeholder={placeholder}
+              autoComplete={autoComplete}
+              aria-invalid={fieldState.invalid}
+            />
+          )}
           <FieldError errors={[fieldState.error]} />
         </Field>
       )}

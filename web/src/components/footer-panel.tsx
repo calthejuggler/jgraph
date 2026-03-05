@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GithubIcon, MailIcon, MessageSquareIcon, SendIcon } from "lucide-react";
@@ -14,10 +14,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { API_URL } from "@/lib/api";
+import { useSession } from "@/lib/auth-client";
 import { contactSchema, type ContactValues } from "@/lib/schemas";
 
 import { m } from "@/paraglide/messages.js";
@@ -42,34 +41,13 @@ export function FooterPanel() {
 
 function ContactDialog() {
   const [open, setOpen] = useState(false);
-  const [status, setStatus] = useState<"idle" | "sent" | "error">("idle");
-
-  const form = useForm<ContactValues>({
-    resolver: zodResolver(contactSchema()),
-    defaultValues: { name: "", email: "", message: "" },
-  });
-
-  async function onSubmit(values: ContactValues) {
-    setStatus("idle");
-    try {
-      const res = await fetch(`${API_URL}/api/v1/contact`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      if (!res.ok) throw new Error();
-      setStatus("sent");
-      form.reset();
-    } catch {
-      setStatus("error");
-    }
-  }
+  const [sent, setSent] = useState(false);
+  const { data: session, isPending } = useSession();
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
     if (!next) {
-      setStatus("idle");
-      form.reset();
+      setSent(false);
     }
   }
 
@@ -87,46 +65,14 @@ function ContactDialog() {
           <DialogDescription>{m.contact_description()}</DialogDescription>
         </DialogHeader>
 
-        {status === "sent" ? (
+        {sent ? (
           <p className="text-sm text-green-600 dark:text-green-400">{m.contact_success()}</p>
-        ) : (
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-3">
-            <FormField
-              name="name"
-              control={form.control}
-              label={m.contact_name_label()}
-              placeholder={m.contact_name_placeholder()}
-            />
-            <FormField
-              name="email"
-              control={form.control}
-              label={m.contact_email_label()}
-              type="email"
-              placeholder={m.contact_email_placeholder()}
-            />
-            <Controller
-              name="message"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="message">{m.contact_message_label()}</FieldLabel>
-                  <Textarea
-                    {...field}
-                    id="message"
-                    placeholder={m.contact_message_placeholder()}
-                    rows={4}
-                    aria-invalid={fieldState.invalid}
-                  />
-                  <FieldError errors={[fieldState.error]} />
-                </Field>
-              )}
-            />
-            {status === "error" && <p className="text-destructive text-sm">{m.contact_error()}</p>}
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              <SendIcon />
-              {form.formState.isSubmitting ? m.contact_sending() : m.contact_send()}
-            </Button>
-          </form>
+        ) : isPending ? null : (
+          <ContactForm
+            defaultName={session?.user?.name ?? ""}
+            defaultEmail={session?.user?.email ?? ""}
+            onSuccess={() => setSent(true)}
+          />
         )}
 
         <Separator />
@@ -144,5 +90,70 @@ function ContactDialog() {
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ContactForm({
+  defaultName,
+  defaultEmail,
+  onSuccess,
+}: {
+  defaultName: string;
+  defaultEmail: string;
+  onSuccess: () => void;
+}) {
+  const [error, setError] = useState(false);
+  const form = useForm<ContactValues>({
+    resolver: zodResolver(contactSchema()),
+    defaultValues: { name: defaultName, email: defaultEmail, message: "" },
+  });
+
+  async function onSubmit(values: ContactValues) {
+    setError(false);
+    try {
+      const res = await fetch(`${API_URL}/api/v1/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) throw new Error();
+      onSuccess();
+    } catch {
+      setError(true);
+    }
+  }
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-3">
+      <FormField
+        name="name"
+        control={form.control}
+        label={m.contact_name_label()}
+        placeholder={m.contact_name_placeholder()}
+      />
+      <FormField
+        name="email"
+        control={form.control}
+        label={m.contact_email_label()}
+        type="email"
+        placeholder={m.contact_email_placeholder()}
+      />
+      <FormField
+        name="message"
+        control={form.control}
+        label={m.contact_message_label()}
+        placeholder={m.contact_message_placeholder()}
+        multiline
+        rows={4}
+      />
+      {error && !form.formState.isSubmitting && (
+        <p className="text-destructive text-sm">{m.contact_error()}</p>
+      )}
+      <Button type="submit" disabled={form.formState.isSubmitting}>
+        <SendIcon />
+        {form.formState.isSubmitting ? m.contact_sending() : m.contact_send()}
+      </Button>
+    </form>
   );
 }
