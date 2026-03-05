@@ -123,38 +123,66 @@ impl State {
 
     /// Generate all valid states with exactly `num_props` set bits within `max_height` positions.
     ///
-    /// States are returned in a deterministic order produced by backtracking enumeration.
-    /// The first state is always the "ground state" (lowest bits set).
+    /// States are returned in ascending numeric order. The first state is always the
+    /// "ground state" (lowest bits set).
+    #[allow(clippy::cast_possible_truncation)]
     pub fn generate(num_props: u8, max_height: u8) -> Vec<Self> {
-        let mut states: Vec<Self> = vec![];
-        Self::backtrack(max_height, 0, num_props, 0, &mut states);
+        let count = crate::util::binom(max_height, num_props) as usize;
+        let mut states = Vec::with_capacity(count);
+
+        if count == 0 {
+            return states;
+        }
+
+        // Ground state: lowest num_props bits set.
+        let mut x: Bits = if num_props >= MAX_MAX_HEIGHT {
+            Bits::MAX
+        } else {
+            (1 << num_props) - 1
+        };
+        states.push(Self(x));
+
+        for _ in 1..count {
+            x = next_combination(x);
+            states.push(Self(x));
+        }
+
         states
     }
 
-    fn backtrack(max_height: u8, pos: u8, props_left: u8, current: Bits, states: &mut Vec<Self>) {
-        let remaining = max_height - pos;
-        if props_left > remaining {
-            return;
+    /// Return the zero-based index of this state among all states with the same
+    /// popcount, ordered by ascending numeric value.
+    #[allow(clippy::cast_possible_truncation)]
+    pub fn combinatorial_rank(&self) -> usize {
+        let mut rank: usize = 0;
+        let mut bits = self.0;
+        let mut i: u8 = 0;
+        while bits != 0 {
+            let pos = bits.trailing_zeros() as u8;
+            i += 1;
+            rank += crate::util::binom(pos, i) as usize;
+            bits &= bits.wrapping_sub(1);
         }
-        if pos == max_height {
-            if props_left == 0 {
-                states.push(Self(current));
-            }
-            return;
-        }
-
-        Self::backtrack(max_height, pos + 1, props_left, current, states);
-
-        if props_left > 0 {
-            Self::backtrack(
-                max_height,
-                pos + 1,
-                props_left - 1,
-                current | (1 << (max_height - 1 - pos)),
-                states,
-            );
-        }
+        rank
     }
+}
+
+/// Return the next-larger integer with exactly the same number of set bits (Gosper's hack).
+///
+/// See <https://programmingforinsomniacs.blogspot.com/2018/03/gospers-hack-explained.html>.
+#[allow(clippy::cast_possible_truncation)]
+const fn next_combination(x: Bits) -> Bits {
+    debug_assert!(x != 0, "next_combination requires x > 0");
+    let c = x & x.wrapping_neg();
+    let r = x.wrapping_add(c);
+    let diff = r ^ x;
+    let shift = c.trailing_zeros() + 2;
+    let adjusted = if shift >= Bits::BITS {
+        0
+    } else {
+        diff >> shift
+    };
+    r | adjusted
 }
 
 #[cfg(test)]
@@ -313,6 +341,60 @@ mod tests {
         // Ground state: 3 props / 5 max_height → 00111 → "200"
         let s = State::new(0b00111, 5).unwrap();
         assert_eq!(s.to_abbreviated_string(5), "200");
+    }
+
+    #[test]
+    fn test_generate_ascending_order() {
+        let states = State::generate(3, 5);
+        let bits: Vec<Bits> = states.iter().map(|s| s.bits()).collect();
+        for window in bits.windows(2) {
+            assert!(
+                window[0] < window[1],
+                "states not in ascending order: {} >= {}",
+                window[0],
+                window[1]
+            );
+        }
+    }
+
+    #[test]
+    fn test_generate_snapshot_3_5() {
+        let states = State::generate(3, 5);
+        let bits: Vec<Bits> = states.iter().map(|s| s.bits()).collect();
+        assert_eq!(
+            bits,
+            vec![
+                0b00111, 0b01011, 0b01101, 0b01110, 0b10011, 0b10101, 0b10110, 0b11001, 0b11010,
+                0b11100
+            ],
+            "exact state ordering for (3,5)"
+        );
+    }
+
+    #[test]
+    fn test_combinatorial_rank_matches_index() {
+        for (num_props, max_height) in [(3, 5), (2, 4), (4, 8), (1, 3), (5, 5), (0, 3)] {
+            let states = State::generate(num_props, max_height);
+            for (expected_idx, state) in states.iter().enumerate() {
+                assert_eq!(
+                    state.combinatorial_rank(),
+                    expected_idx,
+                    "rank mismatch for state {:b} (num_props={}, max_height={})",
+                    state.bits(),
+                    num_props,
+                    max_height,
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_generate_single_prop_max_height() {
+        let states = State::generate(1, MAX_MAX_HEIGHT);
+        assert_eq!(states.len(), MAX_MAX_HEIGHT as usize);
+        for (i, s) in states.iter().enumerate() {
+            assert_eq!(s.bits(), 1 << i);
+        }
     }
 
     #[test]
