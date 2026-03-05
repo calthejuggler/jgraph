@@ -59,6 +59,7 @@ export function BuilderGraphPanel({ state, maxHeight, numProps }: BuilderGraphPa
       fitView
       fitViewOptions={FIT_VIEW_OPTIONS}
       colorMode={theme}
+      proOptions={{ hideAttribution: true }}
     >
       <Background variant={BackgroundVariant.Dots} />
       <Controls />
