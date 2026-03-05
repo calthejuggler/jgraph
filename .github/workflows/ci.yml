@@ -12,7 +12,6 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -23,6 +22,7 @@ jobs:
   lint-format:
     name: Lint & Format
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -35,6 +35,7 @@ jobs:
   engine-check:
     name: Engine Check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: engine
@@ -52,6 +53,7 @@ jobs:
   juggling-tools-check:
     name: Juggling Tools Lint & Doc
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: engine
@@ -73,6 +75,7 @@ jobs:
   engine-test:
     name: Engine Test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: engine
@@ -87,31 +90,8 @@ jobs:
   engine-build:
     name: Engine Build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [lint-format, engine-check, engine-test, juggling-tools-check]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: engine
-          push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/engine:latest
-            ${{ env.IMAGE_PREFIX }}/engine:${{ github.sha }}
-          build-args: STATE_SIZE=u32
-          cache-from: type=gha,scope=engine
-          cache-to: type=gha,scope=engine,mode=max
-
-  engine-build-check:
-    name: Engine Build Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -119,12 +99,14 @@ jobs:
         with:
           context: engine
           push: false
+          build-args: STATE_SIZE=u32
           cache-from: type=gha,scope=engine
           cache-to: type=gha,scope=engine,mode=max
 
   server-check:
     name: Server Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: server
@@ -139,35 +121,8 @@ jobs:
   server-build:
     name: Server Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [lint-format, server-check]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Get Bun version
-        id: bun-version
-        run: echo "version=$(jq -r '.packageManager' package.json | sed 's/bun@//')" >> $GITHUB_OUTPUT
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: server/Dockerfile
-          push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/server:latest
-            ${{ env.IMAGE_PREFIX }}/server:${{ github.sha }}
-          build-args: BUN_VERSION=${{ steps.bun-version.outputs.version }}
-          cache-from: type=gha,scope=server
-          cache-to: type=gha,scope=server,mode=max
-
-  server-build-check:
-    name: Server Build Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - name: Get Bun version
@@ -186,6 +141,7 @@ jobs:
   web-check:
     name: Web Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: web
@@ -200,35 +156,8 @@ jobs:
   web-build:
     name: Web Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [lint-format, web-check]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Get Bun version
-        id: bun-version
-        run: echo "version=$(jq -r '.packageManager' package.json | sed 's/bun@//')" >> $GITHUB_OUTPUT
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: web/Dockerfile
-          push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/web:latest
-            ${{ env.IMAGE_PREFIX }}/web:${{ github.sha }}
-          build-args: BUN_VERSION=${{ steps.bun-version.outputs.version }}
-          cache-from: type=gha,scope=web
-          cache-to: type=gha,scope=web,mode=max
-
-  web-build-check:
-    name: Web Build Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - name: Get Bun version
@@ -244,13 +173,63 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,scope=web,mode=max
 
+  push-images:
+    name: Push ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    needs: [engine-build, server-build, web-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: engine
+            context: engine
+            scope: engine
+          - image: server
+            context: .
+            file: server/Dockerfile
+            scope: server
+          - image: web
+            context: .
+            file: web/Dockerfile
+            scope: web
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get Bun version
+        if: matrix.image != 'engine'
+        id: bun-version
+        run: echo "version=$(jq -r '.packageManager' package.json | sed 's/bun@//')" >> $GITHUB_OUTPUT
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}:latest
+            ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}:${{ github.sha }}
+          build-args: ${{ matrix.image == 'engine' && 'STATE_SIZE=u32' || format('BUN_VERSION={0}', steps.bun-version.outputs.version) }}
+          cache-from: type=gha,scope=${{ matrix.scope }}
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: [engine-build, server-build, web-build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 5
+    needs: [push-images]
     steps:
       - name: Trigger Coolify deployment
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
         run: |
-          curl -sSf -X GET "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
+          curl -sSf -X GET "$COOLIFY_WEBHOOK_URL" \
+            -H "Authorization: Bearer $COOLIFY_API_TOKEN"
