@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::state::State;
+use super::state::{Bits, MAX_MAX_HEIGHT, State};
 
 /// A single transition from one juggling [`State`] to another, representing a throw
 /// of a specific height.
@@ -49,41 +49,89 @@ impl Transition {
     /// (time step with no catch). If a prop is landing (rightmost bit set), one transition
     /// is generated for each unoccupied future beat the prop could be thrown to.
     pub fn from_state(state: State, max_height: u8) -> Vec<Self> {
-        let mut transitions: Vec<Self> = vec![];
+        TransitionIter::new(state, max_height)
+            .map(|(to, throw_height)| Self {
+                from: state,
+                to,
+                throw_height,
+                max_height,
+            })
+            .collect()
+    }
+}
 
+/// Iterator over all valid transitions from a juggling state.
+///
+/// Yields `(destination_state, throw_height)` pairs. For states with no prop landing
+/// on the current beat, yields a single zero-throw. For states with a prop landing,
+/// yields one transition per unoccupied future beat.
+#[derive(Debug, Clone)]
+#[allow(missing_copy_implementations)]
+pub struct TransitionIter {
+    shifted: Bits,
+    available: Bits,
+    zero_throw_pending: bool,
+}
+
+impl TransitionIter {
+    /// Create an iterator over transitions from `state` within `max_height`.
+    pub const fn new(state: State, max_height: u8) -> Self {
         let rightmost = state.bits() & 1 != 0;
         let shifted = state.bits() >> 1;
 
         if rightmost {
-            for bit_pos in 0..max_height {
-                if (shifted >> bit_pos) & 1 == 0 {
-                    let new_bits = shifted | (1 << bit_pos);
-                    let throw_height = bit_pos + 1;
-
-                    transitions.push(Self {
-                        from: state,
-                        // SAFETY (logical): new_bits sets at most bit (max_height - 1)
-                        // because bit_pos < max_height and shifted had no bits >= max_height.
-                        to: State::from_bits(new_bits),
-                        throw_height,
-                        max_height,
-                    });
-                }
+            let mask: Bits = if max_height >= MAX_MAX_HEIGHT {
+                Bits::MAX
+            } else {
+                (1 << max_height) - 1
+            };
+            Self {
+                shifted,
+                available: !shifted & mask,
+                zero_throw_pending: false,
             }
         } else {
-            transitions.push(Self {
-                from: state,
-                // SAFETY (logical): shifted has strictly fewer bits set than state,
-                // which was already valid for max_height.
-                to: State::from_bits(shifted),
-                throw_height: 0,
-                max_height,
-            });
+            Self {
+                shifted,
+                available: 0,
+                zero_throw_pending: true,
+            }
         }
-
-        transitions
     }
 }
+
+impl Iterator for TransitionIter {
+    type Item = (State, u8);
+
+    #[allow(clippy::cast_possible_truncation)]
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.zero_throw_pending {
+            self.zero_throw_pending = false;
+            return Some((State::from_bits(self.shifted), 0));
+        }
+
+        if self.available == 0 {
+            return None;
+        }
+
+        let bit = self.available & self.available.wrapping_neg();
+        self.available ^= bit;
+        let throw_height = bit.trailing_zeros() as u8 + 1;
+        Some((State::from_bits(self.shifted | bit), throw_height))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = if self.zero_throw_pending {
+            1
+        } else {
+            self.available.count_ones() as usize
+        };
+        (remaining, Some(remaining))
+    }
+}
+
+impl ExactSizeIterator for TransitionIter {}
+impl std::iter::FusedIterator for TransitionIter {}
 
 #[cfg(test)]
 mod tests {
