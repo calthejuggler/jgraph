@@ -1,20 +1,26 @@
-use std::collections::HashMap;
-
-use super::compute::compute_transitions;
 use super::graph::{Params, ParamsError};
 use super::state::State;
+use super::transition::TransitionIter;
 
-/// A state transition table.
+/// Sentinel value indicating no transition exists between two states in a [`StateTable`].
 ///
-/// An N×N matrix where rows are source states, columns are destination states,
-/// and cells contain the throw height for that transition (or `None` if none exists).
+/// This value (255) is safe to use as a sentinel because the maximum possible throw
+/// height is [`MAX_MAX_HEIGHT`](super::state::MAX_MAX_HEIGHT) (at most 128).
+pub const NO_TRANSITION: u8 = u8::MAX;
+
+/// A state transition table stored as a flat N×N matrix.
+///
+/// Rows are source states, columns are destination states, and cells contain the throw
+/// height for that transition (or [`NO_TRANSITION`] if none exists). The matrix is stored
+/// as a contiguous `Vec<u8>` indexed as `cells[from_idx * n + to_idx]`.
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StateTable {
-    /// All valid states, in the same order as the graph.
+    /// All valid states, in ascending numeric order matching their combinatorial rank.
     pub states: Vec<State>,
-    /// `cells[from_idx][to_idx]` = throw height or `None`.
-    pub cells: Vec<Vec<Option<u8>>>,
+    /// Flat N×N matrix of throw heights. Use [`StateTable::cell`] for safe access.
+    /// [`NO_TRANSITION`] indicates no direct transition exists.
+    pub cells: Vec<u8>,
     /// The ground state (lowest bits set).
     pub ground_state: State,
     /// The number of props this table was generated for.
@@ -23,43 +29,49 @@ pub struct StateTable {
     pub max_height: u8,
 }
 
+impl StateTable {
+    /// Look up the throw height for a transition from state at `from_idx` to `to_idx`.
+    ///
+    /// Returns `Some(throw_height)` if a direct transition exists, or `None` otherwise.
+    pub fn cell(&self, from_idx: usize, to_idx: usize) -> Option<u8> {
+        let n = self.states.len();
+        self.cells
+            .get(from_idx * n + to_idx)
+            .copied()
+            .filter(|&v| v != NO_TRANSITION)
+    }
+}
+
 /// Compute the state transition table for the given parameters.
-///
-/// Builds the N×N matrix directly from the shared [`compute_transitions`] intermediate.
 ///
 /// # Errors
 ///
 /// Returns a [`ParamsError`] if the parameters fail validation.
 pub fn compute_table(params: &Params) -> Result<StateTable, ParamsError> {
-    let ts = compute_transitions(params)?;
+    params.validate()?;
 
-    let index_map: HashMap<_, _> = ts
-        .states
-        .iter()
-        .enumerate()
-        .map(|(i, s)| (s.bits(), i))
-        .collect();
+    let states = State::generate(params.num_props, params.max_height);
+    let n = states.len();
+    let mut cells = vec![NO_TRANSITION; n * n];
 
-    let n = ts.states.len();
-    let mut cells = vec![vec![None; n]; n];
-
-    for t in &ts.transitions {
-        if let (Some(&from_idx), Some(&to_idx)) = (
-            index_map.get(&t.from().bits()),
-            index_map.get(&t.to().bits()),
-        ) && let Some(row) = cells.get_mut(from_idx)
-            && let Some(cell) = row.get_mut(to_idx)
-        {
-            *cell = Some(t.throw_height());
+    for (from_idx, &state) in states.iter().enumerate() {
+        for (to, throw_height) in TransitionIter::new(state, params.max_height) {
+            let to_idx = to.combinatorial_rank();
+            if let Some(cell) = cells.get_mut(from_idx * n + to_idx) {
+                *cell = throw_height;
+            }
         }
     }
 
     Ok(StateTable {
-        states: ts.states,
+        // State::generate with validated params (num_props <= max_height) always produces
+        // at least one state (the ground state), so index 0 is always valid.
+        #[allow(clippy::indexing_slicing)]
+        ground_state: states[0],
+        states,
         cells,
-        ground_state: ts.ground_state,
-        num_props: ts.num_props,
-        max_height: ts.max_height,
+        num_props: params.num_props,
+        max_height: params.max_height,
     })
 }
 
@@ -79,11 +91,8 @@ mod tests {
     fn test_table_dimensions() {
         let table = compute_table(&params(3, 5)).unwrap();
         let n = table.states.len();
-        assert_eq!(n, 10); // C(5,3)
-        assert_eq!(table.cells.len(), n);
-        for row in &table.cells {
-            assert_eq!(row.len(), n);
-        }
+        assert_eq!(n, 10, "C(5,3) = 10 states");
+        assert_eq!(table.cells.len(), n * n, "flat table should have n*n cells");
     }
 
     #[test]
@@ -92,18 +101,11 @@ mod tests {
         let graph = compute_graph(&p).unwrap();
         let table = compute_table(&p).unwrap();
 
-        let index_map: HashMap<_, _> = table
-            .states
-            .iter()
-            .enumerate()
-            .map(|(i, s)| (s.bits(), i))
-            .collect();
-
         for edge in &graph.edges {
-            let from_idx = *index_map.get(&edge.from.bits()).unwrap();
-            let to_idx = *index_map.get(&edge.to.bits()).unwrap();
+            let from_idx = edge.from.combinatorial_rank();
+            let to_idx = edge.to.combinatorial_rank();
             assert_eq!(
-                table.cells[from_idx][to_idx],
+                table.cell(from_idx, to_idx),
                 Some(edge.throw_height),
                 "cell [{from_idx}][{to_idx}] should be Some({})",
                 edge.throw_height
@@ -117,17 +119,10 @@ mod tests {
         let p = params(3, 5);
         let graph = compute_graph(&p).unwrap();
 
-        let index_map: HashMap<_, _> = table
-            .states
-            .iter()
-            .enumerate()
-            .map(|(i, s)| (s.bits(), i))
-            .collect();
-
         let mut edge_set = std::collections::HashSet::new();
         for edge in &graph.edges {
-            let from_idx = *index_map.get(&edge.from.bits()).unwrap();
-            let to_idx = *index_map.get(&edge.to.bits()).unwrap();
+            let from_idx = edge.from.combinatorial_rank();
+            let to_idx = edge.to.combinatorial_rank();
             edge_set.insert((from_idx, to_idx));
         }
 
@@ -136,7 +131,8 @@ mod tests {
             for to in 0..n {
                 if !edge_set.contains(&(from, to)) {
                     assert_eq!(
-                        table.cells[from][to], None,
+                        table.cell(from, to),
+                        None,
                         "cell [{from}][{to}] should be None"
                     );
                 }
@@ -153,11 +149,10 @@ mod tests {
     #[test]
     fn test_single_state() {
         let table = compute_table(&params(3, 3)).unwrap();
-        assert_eq!(table.states.len(), 1);
-        assert_eq!(table.cells.len(), 1);
-        assert_eq!(table.cells[0].len(), 1);
+        assert_eq!(table.states.len(), 1, "single state");
+        assert_eq!(table.cells.len(), 1, "single cell in flat table");
         // Self-loop: throw height == max_height
-        assert_eq!(table.cells[0][0], Some(3));
+        assert_eq!(table.cell(0, 0), Some(3), "self-loop with throw 3");
     }
 
     #[test]
@@ -178,12 +173,7 @@ mod tests {
         let graph = compute_graph(&p).unwrap();
         let table = compute_table(&p).unwrap();
 
-        let some_count: usize = table
-            .cells
-            .iter()
-            .flat_map(|row| row.iter())
-            .filter(|c| c.is_some())
-            .count();
+        let some_count = table.cells.iter().filter(|&&c| c != NO_TRANSITION).count();
         assert_eq!(some_count, graph.edges.len());
     }
 }

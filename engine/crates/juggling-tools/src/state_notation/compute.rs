@@ -12,7 +12,7 @@ pub struct TransitionSet {
     pub states: Vec<State>,
     /// All transitions between those states.
     pub transitions: Vec<Transition>,
-    /// The ground state (lowest bits set) — the "default" juggling pattern.
+    /// The ground state (lowest bits set).
     pub ground_state: State,
     /// The number of props this was generated for.
     pub num_props: u8,

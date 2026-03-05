@@ -1,7 +1,7 @@
 use std::fmt;
 
-use super::compute::compute_transitions;
 use super::state::{MAX_MAX_HEIGHT, State};
+use super::transition::TransitionIter;
 
 /// Parameters for generating a state transition graph or table.
 #[derive(Debug, Clone, Copy)]
@@ -77,7 +77,7 @@ pub struct StateGraph {
     pub states: Vec<State>,
     /// All edges (transitions) between states.
     pub edges: Vec<Edge>,
-    /// The ground state (lowest bits set) — the "default" juggling pattern.
+    /// The ground state (lowest bits set).
     pub ground_state: State,
     /// The number of props this graph was generated for.
     pub num_props: u8,
@@ -91,24 +91,31 @@ pub struct StateGraph {
 ///
 /// Returns a [`ParamsError`] if the parameters fail validation.
 pub fn compute_graph(params: &Params) -> Result<StateGraph, ParamsError> {
-    let ts = compute_transitions(params)?;
+    params.validate()?;
 
-    let edges = ts
-        .transitions
-        .iter()
-        .map(|t| Edge {
-            from: t.from(),
-            to: t.to(),
-            throw_height: t.throw_height(),
-        })
-        .collect();
+    let states = State::generate(params.num_props, params.max_height);
+    let max_transitions_per_state = (params.max_height - params.num_props + 1) as usize;
+    let mut edges = Vec::with_capacity(states.len() * max_transitions_per_state);
+
+    for &state in &states {
+        for (to, throw_height) in TransitionIter::new(state, params.max_height) {
+            edges.push(Edge {
+                from: state,
+                to,
+                throw_height,
+            });
+        }
+    }
 
     Ok(StateGraph {
-        ground_state: ts.ground_state,
-        states: ts.states,
+        // State::generate with validated params (num_props <= max_height) always produces
+        // at least one state (the ground state), so index 0 is always valid.
+        #[allow(clippy::indexing_slicing)]
+        ground_state: states[0],
+        states,
         edges,
-        num_props: ts.num_props,
-        max_height: ts.max_height,
+        num_props: params.num_props,
+        max_height: params.max_height,
     })
 }
 

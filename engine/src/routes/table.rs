@@ -117,6 +117,8 @@ fn ok_response(body: Body) -> Result<Response, StatusCode> {
 }
 
 pub fn compute_table(params: &StateNotationQuery) -> Vec<u8> {
+    use std::fmt::Write;
+
     let compact = params.compact;
     let max_height = params.max_height;
     let num_props = params.num_props;
@@ -125,42 +127,50 @@ pub fn compute_table(params: &StateNotationQuery) -> Vec<u8> {
     let table = juggling_tools::state_notation::compute_table(&params.to_library_params())
         .expect("params should be validated before calling compute_table");
 
-    let state_value = |s: &juggling_tools::state_notation::State| -> String {
+    let mut buf = String::with_capacity(4096);
+
+    let write_state = |buf: &mut String, s: &juggling_tools::state_notation::State| {
         if compact {
-            s.bits().to_string()
+            let _ = write!(buf, "{}", s.bits());
         } else {
-            let binary = s.to_binary_string(max_height);
-            let display = if reversed {
-                binary.chars().rev().collect::<String>()
+            buf.push('"');
+            if reversed {
+                for i in 0..max_height {
+                    buf.push(if s.prop_at(i) { '1' } else { '0' });
+                }
             } else {
-                binary
-            };
-            format!("\"{}\"", display)
+                for i in (0..max_height).rev() {
+                    buf.push(if s.prop_at(i) { '1' } else { '0' });
+                }
+            }
+            buf.push('"');
         }
     };
-
-    let mut buf = String::with_capacity(4096);
 
     buf.push_str("{\"states\":[");
     for (i, state) in table.states.iter().enumerate() {
         if i > 0 {
             buf.push(',');
         }
-        buf.push_str(&state_value(state));
+        write_state(&mut buf, state);
     }
 
+    let n = table.states.len();
+
     buf.push_str("],\"cells\":[");
-    for (i, row) in table.cells.iter().enumerate() {
+    for i in 0..n {
         if i > 0 {
             buf.push(',');
         }
         buf.push('[');
-        for (j, cell) in row.iter().enumerate() {
+        for j in 0..n {
             if j > 0 {
                 buf.push(',');
             }
-            match cell {
-                Some(v) => buf.push_str(&v.to_string()),
+            match table.cell(i, j) {
+                Some(v) => {
+                    let _ = write!(buf, "{v}");
+                }
                 None => buf.push_str("null"),
             }
         }
@@ -168,13 +178,12 @@ pub fn compute_table(params: &StateNotationQuery) -> Vec<u8> {
     }
 
     buf.push_str("],\"ground_state\":");
-    buf.push_str(&state_value(&table.ground_state));
-    buf.push_str(",\"num_states\":");
-    buf.push_str(&table.states.len().to_string());
-    buf.push_str(",\"max_height\":");
-    buf.push_str(&max_height.to_string());
-    buf.push_str(",\"num_props\":");
-    buf.push_str(&num_props.to_string());
+    write_state(&mut buf, &table.ground_state);
+    let _ = write!(
+        buf,
+        ",\"num_states\":{},\"max_height\":{},\"num_props\":{}",
+        n, max_height, num_props
+    );
     buf.push('}');
 
     buf.into_bytes()
