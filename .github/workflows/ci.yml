@@ -12,9 +12,12 @@ concurrency:
 
 permissions:
   contents: read
+  packages: write
 
 env:
   CARGO_TERM_COLOR: always
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/calthejuggler/juggling-tools
 
 jobs:
   lint-format:
@@ -84,6 +87,31 @@ jobs:
   engine-build:
     name: Engine Build
     runs-on: ubuntu-latest
+    needs: [lint-format, engine-check, engine-test, juggling-tools-check]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: engine
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/engine:latest
+            ${{ env.IMAGE_PREFIX }}/engine:${{ github.sha }}
+          build-args: STATE_SIZE=u32
+          cache-from: type=gha,scope=engine
+          cache-to: type=gha,scope=engine,mode=max
+
+  engine-build-check:
+    name: Engine Build Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -111,6 +139,35 @@ jobs:
   server-build:
     name: Server Build
     runs-on: ubuntu-latest
+    needs: [lint-format, server-check]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get Bun version
+        id: bun-version
+        run: echo "version=$(jq -r '.packageManager' package.json | sed 's/bun@//')" >> $GITHUB_OUTPUT
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: server/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/server:latest
+            ${{ env.IMAGE_PREFIX }}/server:${{ github.sha }}
+          build-args: BUN_VERSION=${{ steps.bun-version.outputs.version }}
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,scope=server,mode=max
+
+  server-build-check:
+    name: Server Build Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - name: Get Bun version
@@ -143,6 +200,35 @@ jobs:
   web-build:
     name: Web Build
     runs-on: ubuntu-latest
+    needs: [lint-format, web-check]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get Bun version
+        id: bun-version
+        run: echo "version=$(jq -r '.packageManager' package.json | sed 's/bun@//')" >> $GITHUB_OUTPUT
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/web:latest
+            ${{ env.IMAGE_PREFIX }}/web:${{ github.sha }}
+          build-args: BUN_VERSION=${{ steps.bun-version.outputs.version }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+
+  web-build-check:
+    name: Web Build Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - name: Get Bun version
@@ -157,3 +243,14 @@ jobs:
           build-args: BUN_VERSION=${{ steps.bun-version.outputs.version }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,scope=web,mode=max
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: [engine-build, server-build, web-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Coolify deployment
+        run: |
+          curl -sSf -X GET "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
