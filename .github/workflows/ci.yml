@@ -402,6 +402,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [push-images]
+    if: "!startsWith(github.event.head_commit.message, 'chore(juggling-tools): release') && !startsWith(github.event.head_commit.message, 'Version Packages')"
     steps:
       - name: Trigger Coolify deployment
         env:
