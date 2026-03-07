@@ -18,6 +18,30 @@
         "typescript-eslint": "^8.56.1",
       },
     },
+    "packages/simulator/core": {
+      "name": "@juggling-tools/simulator",
+      "version": "0.1.0",
+      "devDependencies": {
+        "typescript": "^5.7.0",
+      },
+    },
+    "packages/simulator/react": {
+      "name": "@juggling-tools/simulator-react",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@juggling-tools/simulator": "workspace:*",
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "typescript": "^5.7.0",
+      },
+      "peerDependencies": {
+        "@juggling-tools/simulator": ">=0.1.0",
+        "react": "^18.0.0 || ^19.0.0",
+        "react-dom": "^18.0.0 || ^19.0.0",
+      },
+    },
     "server": {
       "name": "@juggling-tools/server",
       "version": "1.0.50",
@@ -43,6 +67,7 @@
       "dependencies": {
         "@hookform/resolvers": "^5.2.2",
         "@inlang/paraglide-js": "^2.13.0",
+        "@juggling-tools/simulator-react": "workspace:*",
         "@tanstack/react-query": "^5.90.21",
         "@tanstack/react-router": "^1.163.3",
         "@tanstack/react-table": "^8.21.3",
@@ -313,6 +338,10 @@
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@juggling-tools/server": ["@juggling-tools/server@workspace:server"],
+
+    "@juggling-tools/simulator": ["@juggling-tools/simulator@workspace:packages/simulator/core"],
+
+    "@juggling-tools/simulator-react": ["@juggling-tools/simulator-react@workspace:packages/simulator/react"],
 
     "@juggling-tools/web": ["@juggling-tools/web@workspace:web"],
 

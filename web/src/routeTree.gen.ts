@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as SimulatorRouteImport } from './routes/simulator'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
@@ -26,6 +27,11 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/verify-email.lazy').then((d) => d.Route))
+const SimulatorRoute = SimulatorRouteImport.update({
+  id: '/simulator',
+  path: '/simulator',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/simulator.lazy').then((d) => d.Route))
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/simulator': typeof SimulatorRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin': typeof AuthedAdminRouteWithChildren
   '/builder': typeof AuthedBuilderRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/simulator': typeof SimulatorRoute
   '/verify-email': typeof VerifyEmailRoute
   '/builder': typeof AuthedBuilderRoute
   '/settings': typeof AuthedSettingsRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/simulator': typeof SimulatorRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_authed/admin': typeof AuthedAdminRouteWithChildren
   '/_authed/builder': typeof AuthedBuilderRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/simulator'
     | '/verify-email'
     | '/admin'
     | '/builder'
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/simulator'
     | '/verify-email'
     | '/builder'
     | '/settings'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/simulator'
     | '/verify-email'
     | '/_authed/admin'
     | '/_authed/builder'
@@ -168,6 +180,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  SimulatorRoute: typeof SimulatorRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
 }
 
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       path: '/verify-email'
       fullPath: '/verify-email'
       preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simulator': {
+      id: '/simulator'
+      path: '/simulator'
+      fullPath: '/simulator'
+      preLoaderRoute: typeof SimulatorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -288,6 +308,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  SimulatorRoute: SimulatorRoute,
   VerifyEmailRoute: VerifyEmailRoute,
 }
 export const routeTree = rootRouteImport

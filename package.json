@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "web",
-    "server"
+    "server",
+    "packages/simulator/*"
   ],
   "packageManager": "bun@1.3.10",
   "type": "module",
@@ -24,6 +25,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit -p web/tsconfig.app.json",
+    "build:simulator": "bun run --filter '@juggling-tools/simulator' build",
+    "build:simulator-react": "bun run build:simulator && bun run --filter '@juggling-tools/simulator-react' build",
     "prepare": "lefthook install"
   },
   "devDependencies": {
