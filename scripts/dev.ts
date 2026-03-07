@@ -1,4 +1,3 @@
-import { existsSync } from "fs";
 import { resolve } from "path";
 
 import { Subprocess } from "bun";
@@ -22,19 +21,16 @@ function log(tag: string, msg: string) {
 }
 
 async function ensureDeps() {
-  const nodeModules = resolve(ROOT, "node_modules");
-  if (!existsSync(nodeModules)) {
-    log("infra", "Installing dependencies...");
-    const proc = Bun.spawn(["bun", "install", "--frozen-lockfile"], {
-      cwd: ROOT,
-      stdout: "inherit",
-      stderr: "inherit",
-    });
-    await proc.exited;
-    if (proc.exitCode !== 0) {
-      console.error("Failed to install dependencies");
-      process.exit(1);
-    }
+  log("infra", "Checking dependencies...");
+  const proc = Bun.spawn(["bun", "install", "--frozen-lockfile"], {
+    cwd: ROOT,
+    stdout: "pipe",
+    stderr: "inherit",
+  });
+  await proc.exited;
+  if (proc.exitCode !== 0) {
+    console.error("Failed to install dependencies");
+    process.exit(1);
   }
 }
 
