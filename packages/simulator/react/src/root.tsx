@@ -36,6 +36,7 @@ type CommonProps = {
   dwellRatio?: number;
   arcPeakPosition?: number;
   background?: string;
+  foreground?: string;
   throwHolds?: boolean;
   autoStart?: boolean;
   onError?: (error: Error) => void;
@@ -88,6 +89,7 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
       dwellRatio,
       arcPeakPosition,
       background,
+      foreground,
       throwHolds,
       autoStart = true,
       onError,
@@ -116,6 +118,7 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
       dwellRatio,
       arcPeakPosition,
       background,
+      foreground,
       throwHolds,
       autoStart,
       onError,
@@ -126,6 +129,7 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
       dwellRatio,
       arcPeakPosition,
       background,
+      foreground,
       throwHolds,
       autoStart,
       onError,
@@ -142,6 +146,7 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
           dwellRatio: opts.dwellRatio,
           arcPeakPosition: opts.arcPeakPosition,
           background: opts.background,
+          foreground: opts.foreground,
           throwHolds: opts.throwHolds,
         });
         setSimulator(sim);
@@ -182,6 +187,10 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
     useEffect(() => {
       if (background !== undefined) simulator?.setBackground(background);
     }, [background, simulator]);
+
+    useEffect(() => {
+      if (foreground !== undefined) simulator?.setForeground(foreground);
+    }, [foreground, simulator]);
 
     useEffect(() => {
       if (!simulator || isPartialMode) return;

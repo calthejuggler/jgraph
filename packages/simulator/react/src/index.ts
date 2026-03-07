@@ -14,6 +14,7 @@ export type { HandRenderData, HandRenderFn } from "./hands.js";
 export { Ball } from "./ball.js";
 export type { BallRenderData, BallRenderFn } from "./ball.js";
 export { useSimulator } from "./use-simulator.js";
+export { DEFAULT_FOREGROUND } from "@juggling-tools/simulator";
 
 /**
  * Compound component namespace for the juggling simulator.

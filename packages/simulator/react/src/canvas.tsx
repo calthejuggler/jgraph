@@ -7,7 +7,7 @@ import {
   type ComponentPropsWithoutRef,
 } from "react";
 
-import { drawBall, drawHand, drawJuggler } from "@juggling-tools/simulator";
+import { clearCanvas, drawBall, drawHand, drawJuggler } from "@juggling-tools/simulator";
 import type { FrameData } from "@juggling-tools/simulator";
 
 import { Ball, type BallConfig } from "./ball.js";
@@ -34,14 +34,13 @@ const renderWithConfig = (
 ) => {
   const rc = renderConfigRef.current;
 
-  ctx.fillStyle = frame.background;
-  ctx.fillRect(0, 0, w, h);
+  clearCanvas(ctx, w, h, frame.background);
 
   if (rc.juggler) {
     if (rc.juggler.render) {
       rc.juggler.render({ ctx, width: w, height: h, handPositions: frame.handPositions });
     } else {
-      drawJuggler(ctx, w, h, frame.handPositions);
+      drawJuggler(ctx, w, h, frame.handPositions, frame.foreground);
     }
   }
 
@@ -55,10 +54,10 @@ const renderWithConfig = (
         if (renderer.render) {
           renderer.render({ ctx, position, canvasWidth: w });
         } else {
-          drawHand(ctx, w, position);
+          drawHand(ctx, w, position, frame.foreground);
         }
       } else {
-        drawHand(ctx, w, position);
+        drawHand(ctx, w, position, frame.foreground);
       }
     }
   }
