@@ -31,5 +31,11 @@
   "publishConfig": {
     "access": "public"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "homepage": "https://jugglingtools.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/calthejuggler/juggling-tools.git",
+    "directory": "packages/simulator/react"
+  }
 }

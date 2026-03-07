@@ -30,5 +30,6 @@ jobs:
           version: bunx changeset version
           publish: bun run release
         env:
+          LEFTHOOK: 0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

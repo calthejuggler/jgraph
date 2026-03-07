@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2024"
 description = "Core juggling algorithms: state notation, transitions, and graph generation"
 license = "MIT"
+readme = "README.md"
+repository = "https://github.com/calthejuggler/juggling-tools/tree/main/engine/crates/juggling-tools"
+homepage = "https://jugglingtools.com"
 
 [dependencies]
 rayon = { version = "1.11", optional = true }
