@@ -162,7 +162,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
               <BuilderGraphPanel state={state} maxHeight={maxHeight} numProps={numProps} />
             </CardContent>
           </Card>
-          <Card className="h-[300px] md:h-auto md:min-h-0 md:w-64 md:shadow-lg">
+          <Card className="h-140 md:h-auto md:min-h-0 md:w-64 md:shadow-lg">
             <CardContent className="h-full p-0">
               <BuilderSimulatorPanel state={state} numProps={numProps} />
             </CardContent>
