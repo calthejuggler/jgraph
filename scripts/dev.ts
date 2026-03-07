@@ -11,6 +11,9 @@ const COLORS: Record<string, string> = {
   server: "\x1b[33m",
   engine: "\x1b[35m",
   infra: "\x1b[32m",
+  build: "\x1b[34m",
+  sim: "\x1b[91m",
+  "sim-react": "\x1b[94m",
 };
 
 function log(tag: string, msg: string) {
@@ -113,7 +116,28 @@ async function main() {
   await startInfra();
   await Promise.all([waitForHealthy("juggling-tools-db"), waitForHealthy("juggling-tools-redis")]);
 
-  log("infra", "Infrastructure ready. Starting apps...\n");
+  log("infra", "Infrastructure ready. Building simulator packages...\n");
+
+  const buildSim = Bun.spawn(["bun", "run", "build:simulator-react"], {
+    cwd: ROOT,
+    stdout: "pipe",
+    stderr: "pipe",
+    env,
+  });
+  pipeOutput(buildSim.stdout, "build");
+  pipeOutput(buildSim.stderr, "build");
+  await buildSim.exited;
+  if (buildSim.exitCode !== 0) {
+    console.error("Failed to build simulator packages");
+    process.exit(1);
+  }
+
+  log("infra", "Starting apps...\n");
+
+  procs.push(spawnApp("sim", ["bun", "run", "dev"], resolve(ROOT, "packages/simulator/core")));
+  procs.push(
+    spawnApp("sim-react", ["bun", "run", "dev"], resolve(ROOT, "packages/simulator/react")),
+  );
 
   procs.push(
     spawnApp("web", ["bun", "run", "dev"], resolve(ROOT, "web"), {
