@@ -31,7 +31,9 @@ WORKDIR /app
 COPY --from=builder /app/server/server server
 COPY --from=builder /app/server/drizzle ./drizzle
 
+ARG COMMIT_SHA=unknown
 ENV NODE_ENV=production
+ENV COMMIT_SHA=${COMMIT_SHA}
 
 EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \

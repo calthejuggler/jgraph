@@ -10,13 +10,14 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
 ARG STATE_SIZE=u32
+ARG COMMIT_SHA=unknown
 COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN if [ "$STATE_SIZE" != "u32" ]; then \
-      cargo build --release --features "state-${STATE_SIZE}"; \
+      COMMIT_SHA="$COMMIT_SHA" cargo build --release --features "state-${STATE_SIZE}"; \
     else \
-      cargo build --release; \
+      COMMIT_SHA="$COMMIT_SHA" cargo build --release; \
     fi
 
 FROM alpine:3.21

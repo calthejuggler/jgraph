@@ -100,7 +100,9 @@ jobs:
         with:
           context: engine
           push: false
-          build-args: STATE_SIZE=u32
+          build-args: |
+            STATE_SIZE=u32
+            COMMIT_SHA=${{ github.sha }}
           cache-from: type=gha,scope=engine
           cache-to: type=gha,scope=engine,mode=max
 
@@ -135,7 +137,9 @@ jobs:
           context: .
           file: server/Dockerfile
           push: false
-          build-args: BUN_VERSION=${{ steps.bun-version.outputs.version }}
+          build-args: |
+            BUN_VERSION=${{ steps.bun-version.outputs.version }}
+            COMMIT_SHA=${{ github.sha }}
           cache-from: type=gha,scope=server
           cache-to: type=gha,scope=server,mode=max
 
@@ -216,7 +220,9 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}:latest
             ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}:${{ github.sha }}
-          build-args: ${{ matrix.image == 'engine' && 'STATE_SIZE=u32' || format('BUN_VERSION={0}', steps.bun-version.outputs.version) }}
+          build-args: |
+            COMMIT_SHA=${{ github.sha }}
+            ${{ matrix.image == 'engine' && 'STATE_SIZE=u32' || format('BUN_VERSION={0}', steps.bun-version.outputs.version) }}
           cache-from: type=gha,scope=${{ matrix.scope }}
 
   engine-bench:
