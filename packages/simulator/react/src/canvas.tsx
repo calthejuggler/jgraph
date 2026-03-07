@@ -81,6 +81,19 @@ const renderWithConfig = (
   }
 };
 
+/**
+ * Canvas component that renders the juggling animation.
+ *
+ * Must be placed inside a `<Simulator.Root>`. Accepts optional declarative children
+ * (`<Simulator.Juggler>`, `<Simulator.Hands>`, `<Simulator.Ball>`) to configure
+ * what is drawn and how. When no children are provided, the default built-in renderer is used.
+ *
+ * If `width` and `height` props are omitted, the canvas automatically resizes to
+ * fill its parent element using a `ResizeObserver`.
+ *
+ * All standard `<canvas>` HTML attributes (except `ref`) are forwarded to the
+ * underlying element.
+ */
 export const Canvas = ({ children, width, height, ...canvasProps }: CanvasProps) => {
   const { simulator, registerCanvas } = useSimulatorContext();
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);

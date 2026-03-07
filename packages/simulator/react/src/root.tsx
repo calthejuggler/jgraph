@@ -15,9 +15,18 @@ import { SimulatorContext } from "./context.js";
 
 const toError = (e: unknown) => (e instanceof Error ? e : new Error(String(e)));
 
+/**
+ * Imperative handle exposed by {@link Root} via `React.forwardRef`.
+ *
+ * Attach a ref to `<Simulator.Root>` to access these methods for
+ * programmatic control outside of React's declarative flow.
+ */
 export type SimulatorHandle = {
+  /** Start the animation. No-op if already running. */
   readonly start: () => void;
+  /** Stop the animation. */
   readonly stop: () => void;
+  /** Change the siteswap pattern programmatically. */
   readonly setSiteswap: (siteswap: string) => void;
 };
 
@@ -32,6 +41,27 @@ type RootProps = {
   children: React.ReactNode;
 };
 
+/**
+ * Root provider component for the juggling simulator.
+ *
+ * Wraps children in a context that manages the simulator lifecycle. Place a
+ * `<Simulator.Canvas>` inside to render the animation, and use declarative
+ * children (`<Simulator.Juggler>`, `<Simulator.Ball>`, etc.) or the
+ * {@link useSimulator} hook to interact with the simulation.
+ *
+ * @example
+ * ```tsx
+ * <Simulator.Root siteswap="531">
+ *   <Simulator.Canvas style={{ width: "100%", height: 400 }}>
+ *     <Simulator.Juggler />
+ *     <Simulator.Hands />
+ *     <Simulator.Ball color="red" />
+ *     <Simulator.Ball color="green" />
+ *     <Simulator.Ball color="blue" />
+ *   </Simulator.Canvas>
+ * </Simulator.Root>
+ * ```
+ */
 export const Root = forwardRef<SimulatorHandle, RootProps>(
   (
     {
