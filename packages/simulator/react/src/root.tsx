@@ -30,16 +30,31 @@ export type SimulatorHandle = {
   readonly setSiteswap: (siteswap: string) => void;
 };
 
-type RootProps = {
-  siteswap: string;
+type CommonProps = {
+  loopBeats?: number;
   beatDuration?: number;
   dwellRatio?: number;
   arcPeakPosition?: number;
   background?: string;
+  throwHolds?: boolean;
   autoStart?: boolean;
   onError?: (error: Error) => void;
   children: React.ReactNode;
 };
+
+type SiteswapProps = CommonProps & {
+  siteswap: string;
+  throwValues?: never;
+  ballCount?: never;
+};
+
+type ThrowValuesProps = CommonProps & {
+  siteswap?: never;
+  throwValues: number[];
+  ballCount: number;
+};
+
+type RootProps = SiteswapProps | ThrowValuesProps;
 
 /**
  * Root provider component for the juggling simulator.
@@ -66,28 +81,33 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
   (
     {
       siteswap,
+      throwValues,
+      ballCount,
+      loopBeats,
       beatDuration,
       dwellRatio,
       arcPeakPosition,
       background,
+      throwHolds,
       autoStart = true,
       onError,
       children,
     },
     ref,
   ) => {
+    const isPartialMode = throwValues !== undefined;
     const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
     const [simulator, setSimulator] = useState<Simulator | null>(null);
     const [isRunning, setIsRunning] = useState(false);
     const [error, setError] = useState<Error | null>(null);
-    const [currentSiteswap, setCurrentSiteswap] = useState(siteswap);
+    const [currentSiteswap, setCurrentSiteswap] = useState(siteswap ?? "0");
 
     const registerCanvas = setCanvas;
 
     const [prevSiteswapProp, setPrevSiteswapProp] = useState(siteswap);
     if (siteswap !== prevSiteswapProp) {
       setPrevSiteswapProp(siteswap);
-      setCurrentSiteswap(siteswap);
+      if (siteswap !== undefined) setCurrentSiteswap(siteswap);
     }
 
     const optionsRef = useRef({
@@ -96,6 +116,7 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
       dwellRatio,
       arcPeakPosition,
       background,
+      throwHolds,
       autoStart,
       onError,
     });
@@ -105,6 +126,7 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
       dwellRatio,
       arcPeakPosition,
       background,
+      throwHolds,
       autoStart,
       onError,
     };
@@ -115,11 +137,12 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
       const opts = optionsRef.current;
       try {
         const sim = createSimulator(canvas, {
-          siteswap: opts.currentSiteswap,
+          siteswap: isPartialMode ? "0" : opts.currentSiteswap,
           beatDuration: opts.beatDuration,
           dwellRatio: opts.dwellRatio,
           arcPeakPosition: opts.arcPeakPosition,
           background: opts.background,
+          throwHolds: opts.throwHolds,
         });
         setSimulator(sim);
 
@@ -138,7 +161,7 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
         setError(err);
         opts.onError?.(err);
       }
-    }, [canvas]);
+    }, [canvas, isPartialMode]);
 
     useEffect(() => {
       if (beatDuration !== undefined) simulator?.setBeatDuration(beatDuration);
@@ -153,11 +176,15 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
     }, [arcPeakPosition, simulator]);
 
     useEffect(() => {
+      if (throwHolds !== undefined) simulator?.setThrowHolds(throwHolds);
+    }, [throwHolds, simulator]);
+
+    useEffect(() => {
       if (background !== undefined) simulator?.setBackground(background);
     }, [background, simulator]);
 
     useEffect(() => {
-      if (!simulator) return;
+      if (!simulator || isPartialMode) return;
       try {
         simulator.setSiteswap(currentSiteswap);
         setError(null);
@@ -166,7 +193,19 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
         setError(err);
         optionsRef.current.onError?.(err);
       }
-    }, [currentSiteswap, simulator]);
+    }, [currentSiteswap, simulator, isPartialMode]);
+
+    const throwValuesKey = throwValues?.join(",");
+    useEffect(() => {
+      if (!simulator || !isPartialMode || throwValuesKey == null) return;
+      const values = throwValuesKey.split(",").map(Number);
+      simulator.setThrowValues(values, ballCount);
+    }, [simulator, isPartialMode, throwValuesKey, ballCount]);
+
+    useEffect(() => {
+      if (!simulator) return;
+      simulator.setLoopBeats(loopBeats);
+    }, [simulator, loopBeats]);
 
     const applySiteswap = setCurrentSiteswap;
 
