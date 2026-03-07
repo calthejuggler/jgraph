@@ -18,6 +18,8 @@ type PhysicsConfig = {
   readonly dwellRatio: number;
   readonly arcSkewExponent: number;
   readonly heightPerThrow: number;
+  readonly numHands: number;
+  readonly throwHolds: boolean;
 };
 
 export const getHandPositions = (canvasWidth: number, canvasHeight: number, numHands: number) => {
@@ -51,7 +53,10 @@ export const computeBallPositions = (
     const position = findBallPosition(ball.throwEvents, elapsed, handPositions, physics);
     if (position) {
       result.push({ position, color: ball.color });
+      return result;
     }
+    const initialHand = handPositions[ball.id % handPositions.length];
+    result.push({ position: initialHand, color: ball.color });
     return result;
   }, []);
 };
@@ -62,7 +67,8 @@ const findBallPosition = (
   handPositions: readonly Vec2[],
   physics: PhysicsConfig,
 ) => {
-  const { beatDuration, dwellRatio, heightPerThrow, arcSkewExponent } = physics;
+  const { beatDuration, dwellRatio, heightPerThrow, arcSkewExponent, numHands, throwHolds } =
+    physics;
 
   for (let i = throwEvents.length - 1; i >= 0; i--) {
     const event = throwEvents[i];
@@ -74,11 +80,16 @@ const findBallPosition = (
         : landTime + dwellRatio * beatDuration;
 
     if (elapsed >= throwTime && elapsed <= nextDwellEnd) {
+      const isHold = !throwHolds && event.throwValue === numHands;
+
+      if (isHold) {
+        return handPositions[event.fromHand];
+      }
+
       const releaseTime = (event.throwBeat + dwellRatio) * beatDuration;
 
       if (elapsed <= releaseTime) {
-        const hand = handPositions[event.fromHand];
-        return { x: hand.x, y: hand.y };
+        return handPositions[event.fromHand];
       }
 
       if (elapsed <= landTime) {
@@ -90,8 +101,7 @@ const findBallPosition = (
         return parabolicPosition(from, to, progress, peakHeight, arcSkewExponent);
       }
 
-      const hand = handPositions[event.toHand];
-      return { x: hand.x, y: hand.y };
+      return handPositions[event.toHand];
     }
   }
 

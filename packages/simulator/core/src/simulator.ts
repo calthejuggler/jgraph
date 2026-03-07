@@ -2,7 +2,7 @@ import { computeBallPositions, getHandPositions, HAND_Y_RATIO } from "./physics.
 import { renderFrame } from "./render.js";
 import type { FrameData } from "./render.js";
 import type { BallSchedule } from "./schedule.js";
-import { computeSchedule } from "./schedule.js";
+import { computeSchedule, computeScheduleForPartial } from "./schedule.js";
 import { parseSiteswap } from "./siteswap.js";
 import type { Vec2 } from "./types.js";
 
@@ -42,6 +42,8 @@ export type SimulatorOptions = {
   background?: string;
   /** Whether to draw the stick-figure juggler. @defaultValue true */
   showJuggler?: boolean;
+  /** Whether to animate hold throws (throw value = number of hands) as arcs. When `false`, holds keep the ball in hand. @defaultValue false */
+  throwHolds?: boolean;
   /** Optional custom render function that replaces the built-in renderer. */
   render?: CustomRenderFn;
 };
@@ -78,6 +80,12 @@ export type Simulator = {
   readonly setRender: (render: CustomRenderFn | undefined) => void;
   /** Recalculate hand positions after the canvas has been resized. Call this after changing `canvas.width` or `canvas.height`. */
   readonly resize: () => void;
+  /** Toggle whether hold throws (throw value = number of hands) are animated as arcs. When `false`, holds keep the ball in hand. Takes effect on the next frame. */
+  readonly setThrowHolds: (throwHolds: boolean) => void;
+  /** Set raw throw values with an explicit ball count for animating partial (incomplete) patterns. Rebuilds the schedule and restarts. */
+  readonly setThrowValues: (values: number[], ballCount: number) => void;
+  /** Set or clear the loop duration in beats. When set, the animation resets after N beats. */
+  readonly setLoopBeats: (beats: number | undefined) => void;
 };
 
 const INITIAL_SCHEDULE_BEATS = 50;
@@ -104,6 +112,7 @@ const DEFAULTS = {
   colors: DEFAULT_COLORS,
   background: "#111111",
   showJuggler: true,
+  throwHolds: false,
 };
 
 const resolveConfig = (options: SimulatorOptions) => ({
@@ -115,6 +124,7 @@ const resolveConfig = (options: SimulatorOptions) => ({
   colors: options.colors ?? DEFAULTS.colors,
   background: options.background ?? DEFAULTS.background,
   showJuggler: options.showJuggler ?? DEFAULTS.showJuggler,
+  throwHolds: options.throwHolds ?? DEFAULTS.throwHolds,
 });
 
 type SimulatorConfig = ReturnType<typeof resolveConfig>;
@@ -126,12 +136,55 @@ type SimState = {
   readonly handPositions: readonly Vec2[];
   readonly arcSkewExponent: number;
   readonly startTime: number;
+  readonly loopDurationBeats?: number;
+  readonly partialBallCount?: number;
 };
 
 const ARC_SKEW_LOG_BASE = 0.5;
 
 const computeArcSkewExponent = (arcPeakPosition: number) =>
   Math.log(arcPeakPosition) / Math.log(ARC_SKEW_LOG_BASE);
+
+const computeLoopDurationBeats = (balls: readonly BallSchedule[], loopBeats: number): number => {
+  let maxLandingBeat = loopBeats;
+  for (const ball of balls) {
+    for (const event of ball.throwEvents) {
+      if (event.throwBeat >= loopBeats) break;
+      maxLandingBeat = Math.max(maxLandingBeat, event.throwBeat + event.throwValue);
+    }
+  }
+  return maxLandingBeat;
+};
+
+const createStateFromValues = (
+  canvas: HTMLCanvasElement,
+  config: SimulatorConfig,
+  throwValues: number[],
+  ballCount: number,
+  loopBeats?: number,
+): SimState => {
+  const targetBeat = loopBeats
+    ? loopBeats * 3 + Math.max(...throwValues, 0)
+    : INITIAL_SCHEDULE_BEATS;
+  const balls = computeScheduleForPartial(
+    throwValues,
+    ballCount,
+    config.numHands,
+    targetBeat,
+    config.colors,
+  );
+  const loopDurationBeats = loopBeats ? computeLoopDurationBeats(balls, loopBeats) : undefined;
+  return {
+    config: { ...config, siteswap: throwValues },
+    balls,
+    scheduledUpToBeat: targetBeat,
+    handPositions: getHandPositions(canvas.width, canvas.height, config.numHands),
+    arcSkewExponent: computeArcSkewExponent(config.arcPeakPosition),
+    startTime: 0,
+    loopDurationBeats,
+    partialBallCount: ballCount,
+  };
+};
 
 const createState = (canvas: HTMLCanvasElement, config: SimulatorConfig): SimState => ({
   config,
@@ -183,6 +236,8 @@ const computeFrame = (state: SimState, elapsed: number, canvasHeight: number) =>
       dwellRatio: state.config.dwellRatio,
       arcSkewExponent: state.arcSkewExponent,
       heightPerThrow,
+      numHands: state.config.numHands,
+      throwHolds: state.config.throwHolds,
     }),
   };
 };
@@ -213,10 +268,23 @@ export const createSimulator = (
   let customRender = options.render;
   let state = createState(canvas, resolveConfig(options));
   let animationId: number | null = null;
+  let userLoopBeats: number | undefined;
 
   const tick = (now: number) => {
-    const elapsed = now - state.startTime;
-    state = stepState(state, elapsed);
+    let elapsed = now - state.startTime;
+
+    if (state.loopDurationBeats !== undefined) {
+      const loopDuration = state.loopDurationBeats * state.config.beatDuration;
+      if (loopDuration > 0 && elapsed >= loopDuration) {
+        state = { ...state, startTime: now };
+        elapsed = 0;
+      }
+    }
+
+    if (state.partialBallCount === undefined) {
+      state = stepState(state, elapsed);
+    }
+
     const frame = computeFrame(state, elapsed, canvas.height);
     if (customRender) {
       customRender(ctx, canvas.width, canvas.height, frame);
@@ -296,6 +364,27 @@ export const createSimulator = (
     };
   };
 
+  const setThrowHolds = (throwHolds: boolean) => {
+    state = { ...state, config: { ...state.config, throwHolds } };
+  };
+
+  const setThrowValues = (values: number[], ballCount: number) => {
+    const wasRunning = animationId !== null;
+    stop();
+    state = createStateFromValues(canvas, state.config, values, ballCount, userLoopBeats);
+    if (wasRunning) start();
+  };
+
+  const setLoopBeats = (beats: number | undefined) => {
+    userLoopBeats = beats;
+    if (state.partialBallCount !== undefined && beats !== undefined) {
+      const loopDurationBeats = computeLoopDurationBeats(state.balls, beats);
+      state = { ...state, loopDurationBeats };
+    } else {
+      state = { ...state, loopDurationBeats: beats };
+    }
+  };
+
   return {
     start,
     stop,
@@ -309,5 +398,8 @@ export const createSimulator = (
     setShowJuggler,
     setRender,
     resize,
+    setThrowHolds,
+    setThrowValues,
+    setLoopBeats,
   };
 };

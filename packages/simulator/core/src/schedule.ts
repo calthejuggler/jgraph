@@ -96,6 +96,44 @@ const rebuildState = (
   }
 };
 
+export const computeScheduleForPartial = (
+  throwValues: number[],
+  ballCount: number,
+  numHands: number,
+  targetBeat: number,
+  colors: readonly string[],
+) => {
+  const balls: { id: number; color: string; throwEvents: ThrowEvent[] }[] = Array.from(
+    { length: ballCount },
+    (_, i) => ({
+      id: i,
+      color: colors[i % colors.length],
+      throwEvents: [],
+    }),
+  );
+
+  const handQueues = new Map<number, number[]>();
+  for (let handIndex = 0; handIndex < numHands; handIndex++) {
+    handQueues.set(handIndex, []);
+  }
+  const pendingLandings = new Map<number, number[]>();
+
+  for (let i = 0; i < ballCount; i++) {
+    handQueues.get(i % numHands)!.push(i);
+  }
+
+  const paddedValues = new Array(targetBeat + 1).fill(0);
+  for (let i = 0; i < throwValues.length; i++) {
+    paddedValues[i] = throwValues[i];
+  }
+
+  for (let beat = 0; beat <= targetBeat; beat++) {
+    processBeat(beat, paddedValues, numHands, balls, handQueues, pendingLandings);
+  }
+
+  return balls;
+};
+
 const processBeat = (
   beat: number,
   siteswap: number[],
