@@ -142,7 +142,7 @@ export const Canvas = ({ children, width, height, ...canvasProps }: CanvasProps)
   useEffect(() => {
     if (!simulator || !hasVisuals) return;
 
-    simulator.setColors(ballColorKey ? ballColorKey.split(",") : []);
+    if (ballColorKey) simulator.setColors(renderConfigRef.current.balls.map((b) => b.color));
   }, [ballColorKey, hasVisuals, simulator]);
 
   useEffect(() => {

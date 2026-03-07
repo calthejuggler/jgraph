@@ -13,6 +13,8 @@ import { createSimulator } from "@juggling-tools/simulator";
 
 import { SimulatorContext } from "./context.js";
 
+const toError = (e: unknown) => (e instanceof Error ? e : new Error(String(e)));
+
 export type SimulatorHandle = {
   readonly start: () => void;
   readonly stop: () => void;
@@ -50,9 +52,7 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
     const [error, setError] = useState<Error | null>(null);
     const [currentSiteswap, setCurrentSiteswap] = useState(siteswap);
 
-    const registerCanvas = useCallback((el: HTMLCanvasElement) => {
-      setCanvas(el);
-    }, []);
+    const registerCanvas = setCanvas;
 
     const [prevSiteswapProp, setPrevSiteswapProp] = useState(siteswap);
     if (siteswap !== prevSiteswapProp) {
@@ -104,7 +104,7 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
           setIsRunning(false);
         };
       } catch (e) {
-        const err = e instanceof Error ? e : new Error(String(e));
+        const err = toError(e);
         setError(err);
         opts.onError?.(err);
       }
@@ -126,28 +126,29 @@ export const Root = forwardRef<SimulatorHandle, RootProps>(
       if (background !== undefined) simulator?.setBackground(background);
     }, [background, simulator]);
 
-    const applySiteswap = useCallback(
-      (ss: string) => {
-        try {
-          simulator?.setSiteswap(ss);
-          setCurrentSiteswap(ss);
-          setError(null);
-        } catch (e) {
-          const err = e instanceof Error ? e : new Error(String(e));
-          setError(err);
-          onError?.(err);
-        }
-      },
-      [onError, simulator],
-    );
+    useEffect(() => {
+      if (!simulator) return;
+      try {
+        simulator.setSiteswap(currentSiteswap);
+        setError(null);
+      } catch (e) {
+        const err = toError(e);
+        setError(err);
+        optionsRef.current.onError?.(err);
+      }
+    }, [currentSiteswap, simulator]);
+
+    const applySiteswap = setCurrentSiteswap;
 
     const start = useCallback(() => {
-      simulator?.start();
+      if (!simulator) return;
+      simulator.start();
       setIsRunning(true);
     }, [simulator]);
 
     const stop = useCallback(() => {
-      simulator?.stop();
+      if (!simulator) return;
+      simulator.stop();
       setIsRunning(false);
     }, [simulator]);
 
