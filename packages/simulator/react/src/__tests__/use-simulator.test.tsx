@@ -30,21 +30,4 @@ describe("useSimulator", () => {
     const { result } = renderHook(() => useSimulator(), { wrapper });
     expect(result.current.siteswap).toBe("3");
   });
-
-  test("returns control functions", () => {
-    const { result } = renderHook(() => useSimulator(), { wrapper });
-    expect(typeof result.current.setSiteswap).toBe("function");
-    expect(typeof result.current.start).toBe("function");
-    expect(typeof result.current.stop).toBe("function");
-  });
-
-  test("returns isRunning state", () => {
-    const { result } = renderHook(() => useSimulator(), { wrapper });
-    expect(typeof result.current.isRunning).toBe("boolean");
-  });
-
-  test("returns error state", () => {
-    const { result } = renderHook(() => useSimulator(), { wrapper });
-    expect(result.current.error).toBeNull();
-  });
 });

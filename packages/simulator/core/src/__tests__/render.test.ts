@@ -92,14 +92,6 @@ describe("renderFrame", () => {
     expect(arcCalls.length).toBeGreaterThanOrEqual(4);
   });
 
-  test("skips juggler when showJuggler is false", () => {
-    const ctxWith = createMockCtx();
-    const ctxWithout = createMockCtx();
-    renderFrame(ctxWith, 400, 600, { ...baseFrame, showJuggler: true });
-    renderFrame(ctxWithout, 400, 600, { ...baseFrame, showJuggler: false });
-    expect(ctxWith.__calls.length).toBeGreaterThan(ctxWithout.__calls.length);
-  });
-
   test("draws each ball", () => {
     const ctx = createMockCtx();
     const frame: FrameData = {

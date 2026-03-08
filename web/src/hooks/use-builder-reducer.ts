@@ -18,7 +18,7 @@ type BuilderAction =
   | { type: "UNDO" }
   | { type: "RESET"; groundState: number };
 
-function createInitialState(groundState: number): BuilderState {
+export function createInitialState(groundState: number): BuilderState {
   return {
     groundState,
     currentState: groundState,
@@ -27,7 +27,7 @@ function createInitialState(groundState: number): BuilderState {
   };
 }
 
-function builderReducer(state: BuilderState, action: BuilderAction): BuilderState {
+export function builderReducer(state: BuilderState, action: BuilderAction): BuilderState {
   switch (action.type) {
     case "CHOOSE_THROW": {
       const step: BuilderStep = {

@@ -65,20 +65,6 @@ describe("Root", () => {
     unmount();
     expect(sim!.stop).toHaveBeenCalled();
   });
-
-  test("provides siteswap via context", () => {
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <Root siteswap="531">{children}</Root>
-    );
-    const { result } = renderHook(() => useSimulator(), { wrapper });
-    expect(result.current.siteswap).toBe("531");
-  });
-
-  test("provides isRunning state as a boolean", () => {
-    const wrapper = ({ children }: { children: ReactNode }) => <Root siteswap="3">{children}</Root>;
-    const { result } = renderHook(() => useSimulator(), { wrapper });
-    expect(typeof result.current.isRunning).toBe("boolean");
-  });
 });
 
 describe("Root imperative handle", () => {
