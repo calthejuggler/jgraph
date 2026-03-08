@@ -175,7 +175,7 @@ export function BuilderCanvas({
         </div>
 
         {data ? (
-          <Card className="order-1 shrink-0 md:order-2 md:min-h-0 md:flex-1 md:shrink md:overflow-hidden md:shadow-lg">
+          <Card className="order-1 shrink-0 md:order-2 md:max-h-[40%] md:min-h-0 md:shrink md:overflow-hidden md:shadow-lg">
             <CardContent className="pt-4 md:h-full md:overflow-y-auto">
               <ThrowPicker
                 throws={data.throws}
