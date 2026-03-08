@@ -46,7 +46,7 @@ export const throwsRoute = new Elysia()
       wideEvent.compact = query.compact ?? false;
       wideEvent.reversed = query.reversed ?? false;
 
-      if (query.state >= 1 << query.max_height) {
+      if (query.state >= 2 ** query.max_height) {
         set.status = 400;
         const msg = "state bits exceed max_height";
         wideEvent.error_message = msg;
