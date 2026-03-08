@@ -103,3 +103,18 @@ Client → Server (validates params, checks ETag) → Engine (3-tier cache: memo
 - **Engine gracefully degrades** without Redis (falls back to memory + file cache)
 - **Pre-commit hooks** (lefthook) auto-format and lint staged files on commit
 - **Cache versioning**: When the engine response schema changes, bump `SCHEMA_VERSION` in the root `.env` file (single source of truth). Both the engine and server read this env var at startup — it invalidates all three cache tiers (engine memory/Redis/file via the cache key) and browser HTTP cache (via the ETag). The frontend `_v` query param is a static one-time cache bust and does not need bumping.
+
+## Before Finishing (Mandatory Review)
+
+**Before completing any task where you used Edit, Write, or NotebookEdit tools, you MUST run the following review process on all uncommitted changes (staged + unstaged). Do not stop or present your work as done until this is complete.**
+
+1. Run these review skills on all uncommitted changes:
+   - `/code-review:code-review`
+   - `/logging-best-practices`
+2. Work locally — there is no PR.
+3. For each issue raised, verify it's a real problem before fixing. In particular, when reviewing React code, follow the react.dev "You Might Not Need an Effect" guidelines — do not introduce `useEffect` as a fix unless it's genuinely the right solution.
+4. Fix valid issues only. Re-run all reviews after fixes. Repeat until a full pass produces no changes (max 6 iterations).
+5. Scan all changes (original + yours) for:
+   - AI-ish comments — remove them. Code should be self-documenting; only keep comments a human developer would write.
+   - Tool overrides (`eslint-disable`, `@ts-expect-error`, `@ts-ignore`, `// @ts-nocheck`, etc.) — try to fix the underlying code so the override isn't needed. Only keep an override if there's genuinely no clean alternative.
+6. Run `/simplify` on all uncommitted changes.
