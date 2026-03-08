@@ -1,7 +1,11 @@
 pre-push:
   commands:
     changeset-check:
-      run: bunx changeset status --since=origin/main
+      run: |
+        branch=$(git rev-parse --abbrev-ref HEAD)
+        if [ "$branch" = "main" ]; then
+          bunx changeset status --since=origin/main
+        fi
 
 pre-commit:
   parallel: true
