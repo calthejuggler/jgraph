@@ -50,11 +50,11 @@ engine/                    Rust graph computation with multi-tier caching
 
 ### Published packages
 
-| Package | Registry | Description |
-| --- | --- | --- |
-| `juggling-tools` | [crates.io](https://crates.io/crates/juggling-tools) | Core algorithms for state notation, transitions, and graph generation |
-| `@juggling-tools/simulator` | [npm](https://www.npmjs.com/package/@juggling-tools/simulator) | Canvas-based siteswap pattern animator |
-| `@juggling-tools/simulator-react` | [npm](https://www.npmjs.com/package/@juggling-tools/simulator-react) | React bindings for the simulator |
+| Package                           | Registry                                                             | Description                                                           |
+| --------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `juggling-tools`                  | [crates.io](https://crates.io/crates/juggling-tools)                 | Core algorithms for state notation, transitions, and graph generation |
+| `@juggling-tools/simulator`       | [npm](https://www.npmjs.com/package/@juggling-tools/simulator)       | Canvas-based siteswap pattern animator                                |
+| `@juggling-tools/simulator-react` | [npm](https://www.npmjs.com/package/@juggling-tools/simulator-react) | React bindings for the simulator                                      |
 
 ## API
 
