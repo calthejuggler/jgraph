@@ -2,7 +2,8 @@ import { useSyncExternalStore } from "react";
 
 import type { GraphApiResponse, GraphEdge, GraphNode } from "@/lib/graph-types";
 import type { LayoutPhase, WorkerMessage } from "@/workers/graph-layout.worker";
-import GraphLayoutWorker from "@/workers/graph-layout.worker?worker";
+
+import { worker } from "./graph-layout-worker";
 
 import { m } from "@/paraglide/messages.js";
 
@@ -26,7 +27,6 @@ export const PHASE_LABELS: Record<LayoutPhase, string> = {
   finalizing: m.graph_phase_finalizing(),
 };
 
-const worker = new GraphLayoutWorker();
 const listeners = new Set<() => void>();
 
 interface LayoutSnapshot {
