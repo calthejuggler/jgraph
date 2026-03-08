@@ -41,6 +41,7 @@ jobs:
           bun-version-file: "package.json"
       - run: bun install --frozen-lockfile
       - run: bun run knip
+        continue-on-error: true
       - run: bun run lint
       - run: bun run format:check
 

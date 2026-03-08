@@ -61,7 +61,7 @@ export type ChangePasswordValues = z.infer<ReturnType<typeof changePasswordSchem
 export const UI_MAX_HEIGHT = 10;
 export const ABSOLUTE_MAX_HEIGHT = 128;
 
-export function propsHeightSchema(maxHeight: number) {
+function propsHeightSchema(maxHeight: number) {
   return z
     .object({
       num_props: z.number().int().min(1).max(maxHeight),
