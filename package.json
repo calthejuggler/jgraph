@@ -26,6 +26,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit -p web/tsconfig.app.json",
     "knip": "cd web && bunx @inlang/paraglide-js compile --silent && cd .. && knip",
+    "test:web": "bun run --filter '@juggling-tools/web' test",
     "test:simulator": "bun run --filter '@juggling-tools/simulator' test && bun run build:simulator && bun run --filter '@juggling-tools/simulator-react' test",
     "build:simulator": "bun run --filter '@juggling-tools/simulator' build",
     "build:simulator-react": "bun run build:simulator && bun run --filter '@juggling-tools/simulator-react' build",
