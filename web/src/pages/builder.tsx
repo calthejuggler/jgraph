@@ -5,17 +5,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { BuilderCanvas } from "@/components/builder/builder-canvas";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
-import { builderSchema, type BuilderValues } from "@/lib/schemas";
+import { builderSchema, UI_MAX_HEIGHT, type BuilderValues } from "@/lib/schemas";
+import { useConfigQuery } from "@/queries/config";
 import { Route } from "@/routes/_authed/builder";
 
 export function BuilderPage() {
+  const { data: config } = useConfigQuery();
+  const effectiveMax = config?.max_max_height ?? UI_MAX_HEIGHT;
+
   const { num_props, max_height } = Route.useSearch();
   const navigate = Route.useNavigate();
 
   const submitted: BuilderValues = { num_props, max_height };
 
   const form = useForm<BuilderValues>({
-    resolver: zodResolver(builderSchema()),
+    resolver: zodResolver(builderSchema(effectiveMax)),
     defaultValues: submitted,
     mode: "onChange",
   });
@@ -44,6 +48,7 @@ export function BuilderPage() {
         onFieldChange={onFieldChange}
         numProps={num_props}
         maxHeight={max_height}
+        effectiveMax={effectiveMax}
       />
     </div>
   );

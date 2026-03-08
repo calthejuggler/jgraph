@@ -9,7 +9,6 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useBuilderReducer } from "@/hooks/use-builder-reducer";
 import type { BuilderValues } from "@/lib/schemas";
-import { UI_MAX_HEIGHT } from "@/lib/schemas";
 import { useThrowsQuery } from "@/queries/throws";
 
 import { BuilderGraphPanel } from "./builder-graph-panel";
@@ -24,10 +23,17 @@ interface BuilderCanvasProps {
   onFieldChange: () => void;
   numProps: number;
   maxHeight: number;
+  effectiveMax: number;
 }
 
-export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: BuilderCanvasProps) {
-  const groundState = (1 << numProps) - 1;
+export function BuilderCanvas({
+  form,
+  onFieldChange,
+  numProps,
+  maxHeight,
+  effectiveMax,
+}: BuilderCanvasProps) {
+  const groundState = 2 ** numProps - 1;
   const [state, dispatch] = useBuilderReducer(groundState);
 
   const { data, isFetching, error } = useThrowsQuery({
@@ -50,7 +56,6 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
     dispatch({ type: "RESET", groundState });
   }, [dispatch, groundState]);
 
-  // Precompute visitedStates at each step for accurate loop detection in the sequence
   const visitedStatesBefore = useMemo(() => {
     const result: Set<number>[] = [];
     const visited = new Set([state.groundState]);
@@ -81,7 +86,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
                       id="num_props"
                       type="number"
                       min={1}
-                      max={UI_MAX_HEIGHT}
+                      max={effectiveMax}
                       value={field.value}
                       onChange={(e) => {
                         field.onChange(e.target.valueAsNumber);
@@ -105,7 +110,7 @@ export function BuilderCanvas({ form, onFieldChange, numProps, maxHeight }: Buil
                       id="max_height"
                       type="number"
                       min={1}
-                      max={UI_MAX_HEIGHT}
+                      max={effectiveMax}
                       value={field.value}
                       onChange={(e) => {
                         field.onChange(e.target.valueAsNumber);

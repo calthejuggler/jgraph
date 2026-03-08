@@ -59,12 +59,13 @@ export function changePasswordSchema() {
 export type ChangePasswordValues = z.infer<ReturnType<typeof changePasswordSchema>>;
 
 export const UI_MAX_HEIGHT = 10;
+export const ABSOLUTE_MAX_HEIGHT = 128;
 
-export function graphsSchema() {
+export function propsHeightSchema(maxHeight: number) {
   return z
     .object({
-      num_props: z.number().int().min(1).max(UI_MAX_HEIGHT),
-      max_height: z.number().int().min(1).max(UI_MAX_HEIGHT),
+      num_props: z.number().int().min(1).max(maxHeight),
+      max_height: z.number().int().min(1).max(maxHeight),
     })
     .refine((data) => data.max_height >= data.num_props, {
       message: m.validation_max_height(),
@@ -72,11 +73,17 @@ export function graphsSchema() {
     });
 }
 
+export function graphsSchema() {
+  return propsHeightSchema(UI_MAX_HEIGHT);
+}
+
 export type GraphsValues = z.infer<ReturnType<typeof graphsSchema>>;
 
-export const builderSchema = graphsSchema;
+export function builderSchema(maxHeight = ABSOLUTE_MAX_HEIGHT) {
+  return propsHeightSchema(maxHeight);
+}
 
-export type BuilderValues = GraphsValues;
+export type BuilderValues = z.infer<ReturnType<typeof builderSchema>>;
 
 export function contactSchema() {
   return z.object({

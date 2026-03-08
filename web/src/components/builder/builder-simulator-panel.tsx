@@ -4,6 +4,7 @@ import { DEFAULT_FOREGROUND, Simulator } from "@juggling-tools/simulator-react";
 
 import type { BuilderState } from "@/hooks/use-builder-reducer";
 import { useTheme } from "@/hooks/use-theme";
+import { toSiteswapChar } from "@/lib/siteswap-notation";
 
 import { m } from "@/paraglide/messages.js";
 
@@ -30,7 +31,7 @@ export function BuilderSimulatorPanel({ state, numProps }: BuilderSimulatorPanel
     );
 
   if (isComplete) {
-    const siteswap = throwValues.map((v) => v.toString(36)).join("");
+    const siteswap = throwValues.map((v) => toSiteswapChar(v)).join("");
     return (
       <Simulator.Root
         siteswap={siteswap}

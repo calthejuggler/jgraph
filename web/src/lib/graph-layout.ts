@@ -2,6 +2,7 @@ import dagre from "dagre";
 
 import { toAbbreviatedLabel, toBinaryLabel } from "./binary-label";
 import type { ExpandedGraphResponse, GraphApiResponse, GraphEdge, GraphNode } from "./graph-types";
+import { toSiteswapChar } from "./siteswap-notation";
 
 const NODE_WIDTH = 120;
 const NODE_HEIGHT = 40;
@@ -70,7 +71,7 @@ export function extractEdges(expanded: ExpandedGraphResponse, simplified: boolea
     type: simplified ? "simplifiedEdge" : "graphEdge",
     source: edge.from,
     target: edge.to,
-    ...(simplified ? {} : { label: String(edge.throw_height) }),
+    ...(simplified ? {} : { label: toSiteswapChar(edge.throw_height) }),
   }));
 }
 

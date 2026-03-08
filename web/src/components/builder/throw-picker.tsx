@@ -2,6 +2,7 @@ import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { toBinaryLabel } from "@/lib/binary-label";
+import { toSiteswapChar } from "@/lib/siteswap-notation";
 import type { ThrowOption } from "@/lib/throws-types";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +35,7 @@ export function ThrowPicker({
     <div className="space-y-4">
       <div className="space-y-1">
         <p className="text-muted-foreground text-sm">{m.builder_current_state()}</p>
-        <p className="font-mono text-lg font-semibold">{currentLabel}</p>
+        <p className="font-mono text-lg font-semibold break-all">{currentLabel}</p>
       </div>
 
       <div className="space-y-2">
@@ -61,7 +62,7 @@ export function ThrowPicker({
                   key={t.height}
                   variant="outline"
                   className={cn(
-                    "flex h-auto flex-col gap-0.5 py-2",
+                    "flex h-auto flex-col gap-0.5 py-2 whitespace-normal",
                     isGroundLoop &&
                       "border-green-500/50 bg-green-500/10 hover:bg-green-500/20 dark:border-green-400/50 dark:bg-green-400/10 dark:hover:bg-green-400/20",
                     isLoop &&
@@ -70,8 +71,10 @@ export function ThrowPicker({
                   )}
                   onClick={() => onChooseThrow(t.height, t.destination)}
                 >
-                  <span className="text-lg font-bold">{t.height}</span>
-                  <span className="text-muted-foreground font-mono text-xs">{destLabel}</span>
+                  <span className="text-lg font-bold">{toSiteswapChar(t.height)}</span>
+                  <span className="text-muted-foreground font-mono text-xs break-all">
+                    {destLabel}
+                  </span>
                   {isLoop && (
                     <span
                       className={cn(
