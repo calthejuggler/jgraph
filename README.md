@@ -1,6 +1,12 @@
 # Juggling Tools
 
-Tools for computing and exploring siteswap juggling patterns. Pick a number of props and a max throw height, and the app generates every valid juggling state and the throws between them. Visualize the results as a graph, state table, or scatter chart, or use the siteswap builder to construct patterns interactively.
+[![CI](https://github.com/calthejuggler/juggling-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/calthejuggler/juggling-tools/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/juggling-tools)](https://crates.io/crates/juggling-tools)
+[![npm: simulator](https://img.shields.io/npm/v/@juggling-tools/simulator?label=simulator)](https://www.npmjs.com/package/@juggling-tools/simulator)
+[![npm: simulator-react](https://img.shields.io/npm/v/@juggling-tools/simulator-react?label=simulator-react)](https://www.npmjs.com/package/@juggling-tools/simulator-react)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
+
+Tools for computing and exploring siteswap juggling patterns. Pick a number of props and a max throw height, and the app generates every valid juggling state and the throws between them. Visualize the results as a graph, state table, or scatter chart, use the siteswap builder to construct patterns interactively, or drop the simulator packages into your own project to animate patterns in the browser.
 
 ## How it works
 
@@ -37,10 +43,18 @@ This starts PostgreSQL and Redis in Docker, waits for them to be healthy, instal
 ## Project structure
 
 ```
-web/       React frontend
-server/    Elysia API - auth, validation, caching proxy to the engine
-engine/    Rust graph computation with multi-tier caching
+web/                       React frontend
+server/                    Elysia API - auth, validation, caching proxy to the engine
+engine/                    Rust graph computation with multi-tier caching
 ```
+
+### Published packages
+
+| Package | Registry | Description |
+| --- | --- | --- |
+| `juggling-tools` | [crates.io](https://crates.io/crates/juggling-tools) | Core algorithms for state notation, transitions, and graph generation |
+| `@juggling-tools/simulator` | [npm](https://www.npmjs.com/package/@juggling-tools/simulator) | Canvas-based siteswap pattern animator |
+| `@juggling-tools/simulator-react` | [npm](https://www.npmjs.com/package/@juggling-tools/simulator-react) | React bindings for the simulator |
 
 ## API
 

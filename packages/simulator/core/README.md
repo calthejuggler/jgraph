@@ -1,5 +1,11 @@
 # @juggling-tools/simulator
 
+[![npm version](https://img.shields.io/npm/v/@juggling-tools/simulator)](https://www.npmjs.com/package/@juggling-tools/simulator)
+[![npm downloads](https://img.shields.io/npm/dm/@juggling-tools/simulator)](https://www.npmjs.com/package/@juggling-tools/simulator)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@juggling-tools/simulator)](https://bundlephobia.com/package/@juggling-tools/simulator)
+[![types](https://img.shields.io/npm/types/@juggling-tools/simulator)](https://www.npmjs.com/package/@juggling-tools/simulator)
+[![license](https://img.shields.io/npm/l/@juggling-tools/simulator)](https://github.com/calthejuggler/juggling-tools/blob/main/packages/simulator/core/LICENSE)
+
 Browser-based siteswap juggling pattern animator. Pass a siteswap string and a canvas element, and it renders an animated stick-figure juggler throwing and catching balls along parabolic arcs. See it in action at [jugglingtools.com](https://jugglingtools.com).
 
 ## Installation
@@ -28,8 +34,10 @@ createSimulator(canvas, {
   dwellRatio: 0.6, // fraction of beat the ball stays in hand (0-1)
   arcPeakPosition: 0.55, // horizontal skew of throw arc peak (0-1)
   colors: ["red", "green", "blue"], // ball colors (cycles if fewer than balls)
-  background: "#111111", // canvas background color
+  background: "#111111", // canvas background color (supports "transparent")
+  foreground: "rgba(255,255,255,0.6)", // juggler and hand stroke color
   showJuggler: true, // draw stick figure
+  throwHolds: false, // when true, hold throws animate as arcs
   render: (ctx, w, h, frame) => {
     /* custom renderer */
   },
@@ -50,12 +58,18 @@ sim.setDwellRatio(0.5);
 sim.setArcPeakPosition(0.6);
 sim.setColors(["#ff0000", "#00ff00"]);
 sim.setBackground("#000");
+sim.setForeground("rgba(0, 0, 0, 0.6)");
 sim.setShowJuggler(false);
-sim.setRender(customFn); // or null to restore default
+sim.setThrowHolds(true);
+sim.setRender(customFn); // or undefined to restore default
 sim.resize(); // recalculate after canvas resize
+
+// Partial patterns and looping
+sim.setThrowValues([5, 3, 1], 3); // raw throw values with explicit ball count
+sim.setLoopBeats(6); // loop after N beats (undefined to disable)
 ```
 
-Changes to `siteswap`, `numHands`, and `colors` rebuild the throw schedule and restart the animation. Everything else applies live.
+Changes to `siteswap`, `numHands`, `colors`, and `setThrowValues` rebuild the throw schedule and restart the animation. Everything else applies live.
 
 ## Custom rendering
 
@@ -64,6 +78,7 @@ Pass a `render` function to take full control of drawing. You receive pre-comput
 ```ts
 type FrameData = {
   background: string;
+  foreground: string;
   showJuggler: boolean;
   handPositions: Vec2[];
   balls: BallPosition[]; // { position: Vec2, color: string }
@@ -73,7 +88,13 @@ type FrameData = {
 The default renderer's drawing primitives are also exported for mix-and-match use:
 
 ```ts
-import { drawBall, drawHand, drawJuggler } from "@juggling-tools/simulator";
+import {
+  clearCanvas,
+  DEFAULT_FOREGROUND,
+  drawBall,
+  drawHand,
+  drawJuggler,
+} from "@juggling-tools/simulator";
 ```
 
 ## Examples

@@ -31,15 +31,22 @@ const App = () => (
 
 Provider that manages the simulator lifecycle. Wraps everything else.
 
-| Prop              | Type                   | Default     | Description                     |
-| ----------------- | ---------------------- | ----------- | ------------------------------- |
-| `siteswap`        | `string`               | required    | Siteswap pattern (e.g. `"531"`) |
-| `autoStart`       | `boolean`              | `true`      | Start animating on mount        |
-| `beatDuration`    | `number`               | `360`       | Milliseconds per beat           |
-| `dwellRatio`      | `number`               | `0.6`       | Fraction of beat spent in hand  |
-| `arcPeakPosition` | `number`               | `0.55`      | Throw arc peak skew             |
-| `background`      | `string`               | `"#111111"` | Canvas background color         |
-| `onError`         | `(err: Error) => void` | -           | Called on siteswap parse errors |
+| Prop              | Type                   | Default     | Description                                  |
+| ----------------- | ---------------------- | ----------- | -------------------------------------------- |
+| `siteswap`        | `string`               | required\*  | Siteswap pattern (e.g. `"531"`)              |
+| `throwValues`     | `number[]`             | -           | Raw throw values (alternative to `siteswap`) |
+| `ballCount`       | `number`               | -           | Required when using `throwValues`            |
+| `loopBeats`       | `number`               | -           | Number of beats before the pattern loops     |
+| `autoStart`       | `boolean`              | `true`      | Start animating on mount                     |
+| `beatDuration`    | `number`               | `360`       | Milliseconds per beat                        |
+| `dwellRatio`      | `number`               | `0.6`       | Fraction of beat spent in hand               |
+| `arcPeakPosition` | `number`               | `0.55`      | Throw arc peak skew                          |
+| `background`      | `string`               | `"#111111"` | Canvas background color                      |
+| `foreground`      | `string`               | `"#333333"` | Juggler/hand stroke color                    |
+| `throwHolds`      | `boolean`              | `false`     | Hold throws visually in hand                 |
+| `onError`         | `(err: Error) => void` | -           | Called on siteswap parse errors              |
+
+\*Either `siteswap` or `throwValues` + `ballCount` is required. Use `throwValues` when you have raw throw data instead of a siteswap string.
 
 Supports `ref` for imperative control via `SimulatorHandle`:
 
@@ -108,6 +115,10 @@ Access simulator state from any component inside `Root`:
 ```tsx
 const { siteswap, setSiteswap, start, stop, isRunning, error } = useSimulator();
 ```
+
+## Constants
+
+- `DEFAULT_FOREGROUND` - the default foreground color (`"#333333"`), re-exported from `@juggling-tools/simulator`.
 
 ## Examples
 

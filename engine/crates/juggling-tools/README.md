@@ -1,5 +1,9 @@
 # juggling-tools
 
+[![Crates.io](https://img.shields.io/crates/v/juggling-tools)](https://crates.io/crates/juggling-tools)
+[![docs.rs](https://img.shields.io/docsrs/juggling-tools)](https://docs.rs/juggling-tools)
+[![License: MIT](https://img.shields.io/crates/l/juggling-tools)](LICENSE)
+
 Core library for computing siteswap juggling patterns. Given a number of props and a maximum throw height, it generates every valid juggling state and the legal throws between them.
 
 ## How it works
@@ -61,4 +65,4 @@ The state type controls the maximum throw height. `u32` supports up to height 32
 
 ## License
 
-[MIT](../../LICENSE)
+[MIT](LICENSE)
