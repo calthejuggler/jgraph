@@ -21,11 +21,11 @@ Environment: copy `.env.example` to `.env` and fill in secrets before running.
 
 ## Services
 
-| Service | Stack | Port | Path |
-|---------|-------|------|------|
-| web | React 19 + Vite + TanStack Router + Tailwind CSS 4 | 5173 | `web/` |
-| server | Elysia.js + Bun + Drizzle ORM + PostgreSQL | 3000 | `server/` |
-| engine | Rust + Axum + Tokio + Redis | 8000 | `engine/` |
+| Service | Stack                                              | Port | Path      |
+| ------- | -------------------------------------------------- | ---- | --------- |
+| web     | React 19 + Vite + TanStack Router + Tailwind CSS 4 | 5173 | `web/`    |
+| server  | Elysia.js + Bun + Drizzle ORM + PostgreSQL         | 3000 | `server/` |
+| engine  | Rust + Axum + Tokio + Redis                        | 8000 | `engine/` |
 
 ## Detailed Docs
 
