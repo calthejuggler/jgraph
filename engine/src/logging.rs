@@ -1,9 +1,12 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Instant;
 
 use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::Response;
+
+static COMMIT_SHA: LazyLock<String> =
+    LazyLock::new(|| std::env::var("COMMIT_SHA").unwrap_or_else(|_| "unknown".into()));
 
 #[derive(Default)]
 pub struct WideEvent {
@@ -28,7 +31,7 @@ pub async fn wide_event_middleware(mut req: Request, next: Next) -> Response {
     let method = req.method().to_string();
     let path = req.uri().path().to_string();
     let query = req.uri().query().unwrap_or("").to_string();
-    let commit_sha = option_env!("COMMIT_SHA").unwrap_or("unknown");
+    let commit_sha = &*COMMIT_SHA;
     let start = Instant::now();
 
     let wide_event: WideEventHandle = Arc::new(Mutex::new(WideEvent::default()));
