@@ -96,7 +96,7 @@ Client → Server (validates params, checks ETag) → Engine (3-tier cache: memo
 ## Key Patterns
 
 - **Bun** is the JS runtime and package manager — use `bun install`, `bun run`, not npm/node
-- **No tests configured yet** — server and web both have placeholder test scripts
+- **Simulator tests** — `bun run test:simulator` runs unit tests for `@juggling-tools/simulator` (Bun's built-in test runner). Server and web have placeholder test scripts only.
 - **Environment variables** are loaded from root `.env` file (server uses `--env-file=../.env`)
 - **Drizzle migrations** run automatically on server startup (`src/db/index.ts`)
 - **Route file naming**: TanStack Router uses `_` prefix for layout routes, `__root.tsx` for root layout
