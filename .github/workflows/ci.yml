@@ -141,6 +141,18 @@ jobs:
           cache-from: type=gha,scope=engine
           cache-to: type=gha,scope=engine,mode=max
 
+  server-test:
+    name: Server Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+      - run: bun install --frozen-lockfile
+      - run: bun run test:server
+
   server-check:
     name: Server Check
     runs-on: ubuntu-latest
@@ -160,7 +172,7 @@ jobs:
     name: Server Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [lint-format, server-check]
+    needs: [lint-format, server-check, server-test]
     steps:
       - uses: actions/checkout@v4
       - name: Get Bun version
