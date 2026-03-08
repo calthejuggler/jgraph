@@ -12,8 +12,15 @@ mock.module("@/paraglide/messages.js", () => ({
   },
 }));
 
-const { loginSchema, signupSchema, resetPasswordSchema, graphsSchema, contactSchema } =
-  await import("../schemas");
+const {
+  loginSchema,
+  signupSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
+  graphsSchema,
+  contactSchema,
+} = await import("../schemas");
 
 describe("loginSchema", () => {
   const schema = loginSchema();
@@ -45,10 +52,73 @@ describe("signupSchema", () => {
   });
 });
 
+describe("forgotPasswordSchema", () => {
+  const schema = forgotPasswordSchema();
+
+  test("accepts valid email", () => {
+    expect(schema.safeParse({ email: "a@b.com" }).success).toBe(true);
+  });
+
+  test("rejects invalid email", () => {
+    expect(schema.safeParse({ email: "not-email" }).success).toBe(false);
+  });
+});
+
 describe("resetPasswordSchema", () => {
+  const schema = resetPasswordSchema();
+
+  test("accepts matching passwords", () => {
+    const result = schema.safeParse({ password: "12345678", confirmPassword: "12345678" });
+    expect(result.success).toBe(true);
+  });
+
   test("rejects mismatched passwords", () => {
-    const schema = resetPasswordSchema();
     const result = schema.safeParse({ password: "12345678", confirmPassword: "different" });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects short passwords", () => {
+    const result = schema.safeParse({ password: "short", confirmPassword: "short" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("changePasswordSchema", () => {
+  const schema = changePasswordSchema();
+
+  test("accepts valid data with matching passwords", () => {
+    const result = schema.safeParse({
+      currentPassword: "oldpass",
+      newPassword: "12345678",
+      confirmPassword: "12345678",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects mismatched new passwords", () => {
+    const result = schema.safeParse({
+      currentPassword: "oldpass",
+      newPassword: "12345678",
+      confirmPassword: "different",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects empty current password", () => {
+    const result = schema.safeParse({
+      currentPassword: "",
+      newPassword: "12345678",
+      confirmPassword: "12345678",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects short new password", () => {
+    const result = schema.safeParse({
+      currentPassword: "oldpass",
+      newPassword: "short",
+      confirmPassword: "short",
+    });
     expect(result.success).toBe(false);
   });
 });

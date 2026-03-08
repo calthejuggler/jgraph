@@ -1,6 +1,14 @@
 import { describe, expect, test } from "bun:test";
 
-import { expandCompactResponse, extractEdges } from "../graph-layout";
+import {
+  buildDagreGraph,
+  computeGraphLayout,
+  expandCompactResponse,
+  extractEdges,
+  extractNodes,
+  runDagreLayout,
+  SIMPLIFIED_THRESHOLD,
+} from "../graph-layout";
 import type { GraphApiResponse } from "../graph-types";
 
 const sampleData: GraphApiResponse = {
@@ -99,5 +107,164 @@ describe("extractEdges", () => {
     const edges = extractEdges(expanded, false);
 
     expect(edges[0].label).toBe("c"); // 12 in siteswap notation
+  });
+});
+
+describe("buildDagreGraph", () => {
+  test("creates a graph with all nodes from expanded response", () => {
+    const expanded = expandCompactResponse(sampleData, false, false);
+    const g = buildDagreGraph(expanded);
+
+    expect(g.nodes()).toEqual(expect.arrayContaining(["111", "110", "101"]));
+    expect(g.nodes()).toHaveLength(3);
+  });
+
+  test("creates a graph with all edges from expanded response", () => {
+    const expanded = expandCompactResponse(sampleData, false, false);
+    const g = buildDagreGraph(expanded);
+
+    expect(g.edgeCount()).toBe(2);
+    expect(g.hasEdge("111", "110")).toBe(true);
+    expect(g.hasEdge("110", "101")).toBe(true);
+  });
+
+  test("sets rankdir to TB", () => {
+    const expanded = expandCompactResponse(sampleData, false, false);
+    const g = buildDagreGraph(expanded);
+
+    expect(g.graph().rankdir).toBe("TB");
+  });
+
+  test("nodes have width and height metadata", () => {
+    const expanded = expandCompactResponse(sampleData, false, false);
+    const g = buildDagreGraph(expanded);
+
+    const nodeData = g.node("111");
+    expect(nodeData.width).toBe(120);
+    expect(nodeData.height).toBe(40);
+  });
+});
+
+describe("runDagreLayout", () => {
+  test("assigns x and y coordinates to nodes", () => {
+    const expanded = expandCompactResponse(sampleData, false, false);
+    const g = buildDagreGraph(expanded);
+
+    const nodeBefore = g.node("111");
+    expect(nodeBefore.x).toBeUndefined();
+    expect(nodeBefore.y).toBeUndefined();
+
+    runDagreLayout(g);
+
+    const nodeAfter = g.node("111");
+    expect(nodeAfter.x).toBeNumber();
+    expect(nodeAfter.y).toBeNumber();
+  });
+});
+
+describe("extractNodes", () => {
+  test("returns positioned nodes with correct structure", () => {
+    const expanded = expandCompactResponse(sampleData, false, false);
+    const g = buildDagreGraph(expanded);
+    runDagreLayout(g);
+
+    const nodes = extractNodes(g, expanded, "111");
+
+    expect(nodes).toHaveLength(3);
+    for (const node of nodes) {
+      expect(node.type).toBe("graphNode");
+      expect(node.position.x).toBeNumber();
+      expect(node.position.y).toBeNumber();
+    }
+  });
+
+  test("marks the base node with isBase=true", () => {
+    const expanded = expandCompactResponse(sampleData, false, false);
+    const g = buildDagreGraph(expanded);
+    runDagreLayout(g);
+
+    const nodes = extractNodes(g, expanded, "111");
+    const baseNode = nodes.find((n) => n.id === "111");
+    const otherNode = nodes.find((n) => n.id === "110");
+
+    expect(baseNode?.data.isBase).toBe(true);
+    expect(otherNode?.data.isBase).toBe(false);
+  });
+
+  test("positions are offset by half node dimensions", () => {
+    const expanded = expandCompactResponse(sampleData, false, false);
+    const g = buildDagreGraph(expanded);
+    runDagreLayout(g);
+
+    const nodes = extractNodes(g, expanded, "111");
+    const node = nodes[0];
+    const dagrePos = g.node(node.id);
+
+    // position should be dagre center minus half width/height
+    expect(node.position.x).toBe(dagrePos.x - 60);
+    expect(node.position.y).toBe(dagrePos.y - 20);
+  });
+
+  test("node data includes the label", () => {
+    const expanded = expandCompactResponse(sampleData, false, false);
+    const g = buildDagreGraph(expanded);
+    runDagreLayout(g);
+
+    const nodes = extractNodes(g, expanded, "111");
+
+    for (const node of nodes) {
+      expect(node.data.label).toBe(node.id);
+    }
+  });
+});
+
+describe("computeGraphLayout", () => {
+  test("returns nodes, edges, and simplified flag for small graphs", () => {
+    const result = computeGraphLayout(sampleData, false, false);
+
+    expect(result.nodes).toHaveLength(3);
+    expect(result.edges).toHaveLength(2);
+    expect(result.simplified).toBe(false);
+  });
+
+  test("marks graph as simplified when num_nodes exceeds threshold", () => {
+    const largeData: GraphApiResponse = {
+      ...sampleData,
+      num_nodes: SIMPLIFIED_THRESHOLD + 1,
+    };
+    const result = computeGraphLayout(largeData, false, false);
+
+    expect(result.simplified).toBe(true);
+    expect(result.edges[0].type).toBe("simplifiedEdge");
+    expect(result.edges[0].label).toBeUndefined();
+  });
+
+  test("non-simplified graph edges have siteswap labels", () => {
+    const result = computeGraphLayout(sampleData, false, false);
+
+    expect(result.edges[0].type).toBe("graphEdge");
+    expect(result.edges[0].label).toBe("3");
+  });
+
+  test("ground state is used as the base node", () => {
+    const result = computeGraphLayout(sampleData, false, false);
+    const baseNode = result.nodes.find((n) => n.id === "111");
+
+    expect(baseNode?.data.isBase).toBe(true);
+  });
+
+  test("passes abbreviated flag through to label generation", () => {
+    const result = computeGraphLayout(sampleData, false, true);
+
+    // 7=0b111 with maxHeight=3 abbreviated → "000"
+    expect(result.nodes[0].data.label).toBe("000");
+  });
+
+  test("passes reversed flag through to label generation", () => {
+    const result = computeGraphLayout(sampleData, true, false);
+
+    // 6=110 reversed = "011"
+    const node011 = result.nodes.find((n) => n.id === "011");
+    expect(node011).toBeDefined();
   });
 });

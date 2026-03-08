@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 
 import {
   createWrapper,
@@ -285,5 +285,85 @@ describe("admin mutations", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockAuthClient.admin.removeUser).toHaveBeenCalledWith({ userId: "u5" });
+  });
+
+  describe("location-redirecting mutations", () => {
+    const originalLocation = window.location;
+    let assignMock: ReturnType<typeof mock>;
+
+    beforeEach(() => {
+      assignMock = mock(() => {});
+      Object.defineProperty(window, "location", {
+        value: { assign: assignMock },
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    afterEach(() => {
+      Object.defineProperty(window, "location", {
+        value: originalLocation,
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    it("useImpersonateUser calls authClient.admin.impersonateUser", async () => {
+      const { useImpersonateUser } = await import("../admin");
+      const { result } = renderHook(() => useImpersonateUser(), {
+        wrapper: createWrapper({ mutations: true }),
+      });
+
+      result.current.mutate("u6");
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(mockAuthClient.admin.impersonateUser).toHaveBeenCalledWith({ userId: "u6" });
+      expect(assignMock).toHaveBeenCalledWith("/");
+    });
+
+    it("useImpersonateUser throws on error", async () => {
+      mockAuthClient.admin.impersonateUser.mockImplementation(() =>
+        Promise.resolve({ data: null, error: { message: "Forbidden" } }),
+      );
+
+      const { useImpersonateUser } = await import("../admin");
+      const { result } = renderHook(() => useImpersonateUser(), {
+        wrapper: createWrapper({ mutations: true }),
+      });
+
+      result.current.mutate("u6");
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(result.current.error!.message).toBe("Forbidden");
+    });
+
+    it("useStopImpersonating calls authClient.admin.stopImpersonating", async () => {
+      const { useStopImpersonating } = await import("../admin");
+      const { result } = renderHook(() => useStopImpersonating(), {
+        wrapper: createWrapper({ mutations: true }),
+      });
+
+      result.current.mutate();
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(mockAuthClient.admin.stopImpersonating).toHaveBeenCalled();
+      expect(assignMock).toHaveBeenCalledWith("/admin");
+    });
+
+    it("useStopImpersonating throws on error", async () => {
+      mockAuthClient.admin.stopImpersonating.mockImplementation(() =>
+        Promise.resolve({ data: null, error: { message: "Failed" } }),
+      );
+
+      const { useStopImpersonating } = await import("../admin");
+      const { result } = renderHook(() => useStopImpersonating(), {
+        wrapper: createWrapper({ mutations: true }),
+      });
+
+      result.current.mutate();
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(result.current.error!.message).toBe("Failed");
+    });
   });
 });

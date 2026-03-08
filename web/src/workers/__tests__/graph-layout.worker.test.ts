@@ -43,11 +43,12 @@ function makeRequest(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function sendMessage(data: ReturnType<typeof makeRequest>) {
+async function sendMessage(data: ReturnType<typeof makeRequest>) {
   (self.onmessage as (...args: unknown[]) => void).call(
     null,
     new MessageEvent("message", { data }),
   );
+  await new Promise<void>((r) => setTimeout(r, 50));
 }
 
 describe("graph-layout worker", () => {
