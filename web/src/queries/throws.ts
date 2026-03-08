@@ -18,8 +18,6 @@ const throwsQueries = {
     queryOptions({
       queryKey: [...throwsQueries.gets(), params] as const,
       staleTime: Infinity,
-      retry: (_failureCount: number, error: Error) =>
-        !(error instanceof HttpError && error.status === 429),
       queryFn: async ({ signal }) => {
         const searchParams = new URLSearchParams({
           state: String(params.state),

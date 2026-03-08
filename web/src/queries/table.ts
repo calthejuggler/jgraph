@@ -14,8 +14,6 @@ const tableQueries = {
     queryOptions({
       queryKey: [...tableQueries.gets(), params] as const,
       staleTime: Infinity,
-      retry: (_failureCount: number, error: Error) =>
-        !(error instanceof HttpError && error.status === 429),
       queryFn: async ({ signal }) => {
         const searchParams = new URLSearchParams({
           num_props: String(params.num_props),

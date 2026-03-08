@@ -14,13 +14,6 @@ const graphQueries = {
     queryOptions({
       queryKey: [...graphQueries.gets(), params] as const,
       staleTime: Infinity,
-      retry: (_failureCount: number, error: Error) => {
-        if (error instanceof HttpError) {
-          // Only retry server errors (5xx), not client errors (4xx)
-          return error.status >= 500;
-        }
-        return true;
-      },
       queryFn: async ({ signal }) => {
         const searchParams = new URLSearchParams({
           num_props: String(params.num_props),
