@@ -8,7 +8,7 @@ const createMockCanvas = (width = 400, height = 600) => {
     {
       get(_target, prop: string) {
         if (prop === "canvas") return canvas;
-        return (..._args: unknown[]) => {};
+        return () => {};
       },
       set() {
         return true;
@@ -19,7 +19,7 @@ const createMockCanvas = (width = 400, height = 600) => {
   const canvas = {
     width,
     height,
-    getContext: (_type: string) => ctx,
+    getContext: () => ctx,
   } as unknown as HTMLCanvasElement;
 
   return canvas;
@@ -32,8 +32,8 @@ const originalPerf = globalThis.performance;
 
 beforeEach(() => {
   let frameId = 0;
-  globalThis.requestAnimationFrame = mock((_cb: FrameRequestCallback) => ++frameId);
-  globalThis.cancelAnimationFrame = mock((_id: number) => {});
+  globalThis.requestAnimationFrame = mock(() => ++frameId);
+  globalThis.cancelAnimationFrame = mock(() => {});
   globalThis.performance = { now: () => 0 } as Performance;
 });
 
