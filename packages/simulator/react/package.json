@@ -15,7 +15,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch --preserveWatchOutput"
+    "dev": "tsc --watch --preserveWatchOutput",
+    "test": "bun test"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
@@ -25,8 +26,11 @@
     "@juggling-tools/simulator": "workspace:*"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^19.0.0",
+    "happy-dom": "^20.8.3",
     "react": "^19.0.0",
+    "react-dom": "^19.2.4",
     "typescript": "^5.7.0"
   },
   "publishConfig": {
