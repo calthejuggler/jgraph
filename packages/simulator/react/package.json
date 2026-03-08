@@ -16,7 +16,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch --preserveWatchOutput",
-    "test": "bun test"
+    "test": "bun test",
+    "test:coverage": "bun test --coverage"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",

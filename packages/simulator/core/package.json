@@ -17,7 +17,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch --preserveWatchOutput",
-    "test": "bun test"
+    "test": "bun test",
+    "test:coverage": "bun test --coverage"
   },
   "devDependencies": {
     "typescript": "^5.7.0"
