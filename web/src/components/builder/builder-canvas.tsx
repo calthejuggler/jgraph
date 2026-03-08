@@ -160,7 +160,7 @@ export function BuilderCanvas({
         </Card>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-4 md:min-h-0">
         <div className="order-2 flex flex-col gap-4 md:order-1 md:min-h-0 md:flex-1 md:flex-row">
           <Card className="h-[300px] md:h-auto md:min-h-0 md:flex-1 md:shadow-lg">
             <CardContent className="h-full p-0">
@@ -175,8 +175,8 @@ export function BuilderCanvas({
         </div>
 
         {data ? (
-          <Card className="order-1 shrink-0 md:order-2 md:shadow-lg">
-            <CardContent className="pt-4">
+          <Card className="order-1 shrink-0 md:order-2 md:min-h-0 md:flex-1 md:shrink md:overflow-hidden md:shadow-lg">
+            <CardContent className="pt-4 md:h-full md:overflow-y-auto">
               <ThrowPicker
                 throws={data.throws}
                 isFetching={isFetching}
