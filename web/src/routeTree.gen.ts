@@ -18,7 +18,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
 import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
-import { Route as AuthedBuilderRouteImport } from './routes/_authed/builder'
+import { Route as AuthedGraphsRouteImport } from './routes/_authed/graphs'
 import { Route as AuthedAdminRouteImport } from './routes/_authed/admin'
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index'
 
@@ -72,12 +72,12 @@ const AuthedSettingsRoute = AuthedSettingsRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_authed/settings.lazy').then((d) => d.Route),
 )
-const AuthedBuilderRoute = AuthedBuilderRouteImport.update({
-  id: '/builder',
-  path: '/builder',
+const AuthedGraphsRoute = AuthedGraphsRouteImport.update({
+  id: '/graphs',
+  path: '/graphs',
   getParentRoute: () => AuthedRoute,
 } as any).lazy(() =>
-  import('./routes/_authed/builder.lazy').then((d) => d.Route),
+  import('./routes/_authed/graphs.lazy').then((d) => d.Route),
 )
 const AuthedAdminRoute = AuthedAdminRouteImport.update({
   id: '/admin',
@@ -101,7 +101,7 @@ export interface FileRoutesByFullPath {
   '/simulator': typeof SimulatorRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin': typeof AuthedAdminRouteWithChildren
-  '/builder': typeof AuthedBuilderRoute
+  '/graphs': typeof AuthedGraphsRoute
   '/settings': typeof AuthedSettingsRoute
   '/admin/': typeof AuthedAdminIndexRoute
 }
@@ -112,7 +112,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/simulator': typeof SimulatorRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/builder': typeof AuthedBuilderRoute
+  '/graphs': typeof AuthedGraphsRoute
   '/settings': typeof AuthedSettingsRoute
   '/': typeof AuthedIndexRoute
   '/admin': typeof AuthedAdminIndexRoute
@@ -127,7 +127,7 @@ export interface FileRoutesById {
   '/simulator': typeof SimulatorRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_authed/admin': typeof AuthedAdminRouteWithChildren
-  '/_authed/builder': typeof AuthedBuilderRoute
+  '/_authed/graphs': typeof AuthedGraphsRoute
   '/_authed/settings': typeof AuthedSettingsRoute
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/admin/': typeof AuthedAdminIndexRoute
@@ -143,7 +143,7 @@ export interface FileRouteTypes {
     | '/simulator'
     | '/verify-email'
     | '/admin'
-    | '/builder'
+    | '/graphs'
     | '/settings'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -154,7 +154,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/simulator'
     | '/verify-email'
-    | '/builder'
+    | '/graphs'
     | '/settings'
     | '/'
     | '/admin'
@@ -168,7 +168,7 @@ export interface FileRouteTypes {
     | '/simulator'
     | '/verify-email'
     | '/_authed/admin'
-    | '/_authed/builder'
+    | '/_authed/graphs'
     | '/_authed/settings'
     | '/_authed/'
     | '/_authed/admin/'
@@ -249,11 +249,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSettingsRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/builder': {
-      id: '/_authed/builder'
-      path: '/builder'
-      fullPath: '/builder'
-      preLoaderRoute: typeof AuthedBuilderRouteImport
+    '/_authed/graphs': {
+      id: '/_authed/graphs'
+      path: '/graphs'
+      fullPath: '/graphs'
+      preLoaderRoute: typeof AuthedGraphsRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/admin': {
@@ -287,14 +287,14 @@ const AuthedAdminRouteWithChildren = AuthedAdminRoute._addFileChildren(
 
 interface AuthedRouteChildren {
   AuthedAdminRoute: typeof AuthedAdminRouteWithChildren
-  AuthedBuilderRoute: typeof AuthedBuilderRoute
+  AuthedGraphsRoute: typeof AuthedGraphsRoute
   AuthedSettingsRoute: typeof AuthedSettingsRoute
   AuthedIndexRoute: typeof AuthedIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAdminRoute: AuthedAdminRouteWithChildren,
-  AuthedBuilderRoute: AuthedBuilderRoute,
+  AuthedGraphsRoute: AuthedGraphsRoute,
   AuthedSettingsRoute: AuthedSettingsRoute,
   AuthedIndexRoute: AuthedIndexRoute,
 }

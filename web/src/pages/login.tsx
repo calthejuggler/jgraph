@@ -9,7 +9,7 @@ import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { authClient, signIn } from "@/lib/auth-client";
 import { loginSchema, type LoginValues } from "@/lib/schemas";
-import { GRAPH_SEARCH } from "@/routes/_authed";
+import { INDEX_SEARCH } from "@/routes/_authed";
 
 import { m } from "@/paraglide/messages.js";
 
@@ -38,7 +38,7 @@ export function LoginPage() {
           setServerError(res.error.message ?? m.auth_login_failed());
         }
       } else {
-        navigate({ to: "/", search: GRAPH_SEARCH });
+        navigate({ to: "/", search: INDEX_SEARCH });
       }
     } catch {
       setServerError(m.auth_unexpected_error());

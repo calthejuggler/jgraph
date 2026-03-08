@@ -7,7 +7,7 @@ import { BuilderCanvas } from "@/components/builder/builder-canvas";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { builderSchema, UI_MAX_HEIGHT, type BuilderValues } from "@/lib/schemas";
 import { useConfigQuery } from "@/queries/config";
-import { Route } from "@/routes/_authed/builder";
+import { Route } from "@/routes/_authed/index";
 
 export function BuilderPage() {
   const { data: config } = useConfigQuery();

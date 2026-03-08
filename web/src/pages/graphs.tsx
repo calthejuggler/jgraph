@@ -10,7 +10,7 @@ import { graphsSchema, type GraphsValues } from "@/lib/schemas";
 import type { ViewType } from "@/lib/view-types";
 import { useGraphQuery } from "@/queries/graphs";
 import { useTableQuery } from "@/queries/table";
-import { Route } from "@/routes/_authed/index";
+import { Route } from "@/routes/_authed/graphs";
 
 const GraphCanvas = lazy(() =>
   import("@/components/graph/graph-canvas").then((m) => ({

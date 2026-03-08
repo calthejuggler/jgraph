@@ -1,7 +1,7 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 
-import { GraphsPage } from "@/pages/graphs";
+import { BuilderPage } from "@/pages/builder";
 
 export const Route = createLazyFileRoute("/_authed/")({
-  component: GraphsPage,
+  component: BuilderPage,
 });

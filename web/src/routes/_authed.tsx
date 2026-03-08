@@ -27,8 +27,8 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages.js";
 import { getLocale, locales, setLocale } from "@/paraglide/runtime.js";
 
-export const GRAPH_SEARCH = { num_props: 3, max_height: 5, view: "graph" } as const;
-const BUILDER_SEARCH = { num_props: 3, max_height: 5 } as const;
+export const INDEX_SEARCH = { num_props: 3, max_height: 5 } as const;
+const GRAPH_SEARCH = { num_props: 3, max_height: 5, view: "graph" } as const;
 const ADMIN_SEARCH = { page: 1, sortBy: "createdAt", sortDirection: "desc" } as const;
 
 export const Route = createFileRoute("/_authed")({
@@ -72,13 +72,13 @@ function AuthedLayout() {
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/" search={GRAPH_SEARCH}>
-                  {m.nav_state_graphs()}
+                <Link to="/" search={INDEX_SEARCH}>
+                  {m.nav_siteswap_builder()}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/builder" search={BUILDER_SEARCH}>
-                  {m.nav_siteswap_builder()}
+                <Link to="/graphs" search={GRAPH_SEARCH}>
+                  {m.nav_state_graphs()}
                 </Link>
               </DropdownMenuItem>
               {isAdmin && (
@@ -122,18 +122,18 @@ function AuthedLayout() {
               asChild
               className={cn(currentPath === "/" && "bg-accent")}
             >
-              <Link to="/" search={GRAPH_SEARCH}>
-                {m.nav_state_graphs()}
+              <Link to="/" search={INDEX_SEARCH}>
+                {m.nav_siteswap_builder()}
               </Link>
             </Button>
             <Button
               variant="ghost"
               size="sm"
               asChild
-              className={cn(currentPath === "/builder" && "bg-accent")}
+              className={cn(currentPath === "/graphs" && "bg-accent")}
             >
-              <Link to="/builder" search={BUILDER_SEARCH}>
-                {m.nav_siteswap_builder()}
+              <Link to="/graphs" search={GRAPH_SEARCH}>
+                {m.nav_state_graphs()}
               </Link>
             </Button>
             {isAdmin && (
